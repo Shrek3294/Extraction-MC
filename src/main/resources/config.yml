@@ -1,0 +1,6 @@
+# Global settings for Raid Extraction. Values here provide defaults for other configs.
+# Later phases will add lobby spawn, queue sizing, and matchmaking tuning.
+
+debug: false
+lobby_world: world
+announce_start: true

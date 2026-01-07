@@ -13,12 +13,12 @@ This TODO tracks the cloud-safe implementation path for the Raid Extraction Pape
 - [x] Create `.gitignore`, LICENSE (MIT), and baseline README.
 
 ## Phase 1 — Base Plugin & Metadata
-- [ ] Add `plugin.yml` with commands (`raid`, `stash`, `raidadmin`) and permissions (`raid.user`, `raid.admin`).
-- [ ] Implement `RaidExtractionPlugin` lifecycle with logging hooks and configuration initialization.
+- [x] Add `plugin.yml` with commands (`raid`, `stash`, `raidadmin`) and permissions (`raid.user`, `raid.admin`).
+- [x] Implement `RaidExtractionPlugin` lifecycle with logging hooks and configuration initialization.
 
 ## Phase 2 — Config Schemas & Loader
-- [ ] Add `config.yml`, `raids.yml`, `loot_tables.yml`, and `director.yml` resource files with comments.
-- [ ] Implement `ConfigManager` plus models (`RaidDefinition`, `EvacZoneDefinition`, `LootTableDefinition`, `LootEntry`) and soft validation.
+- [x] Add `config.yml`, `raids.yml`, `loot_tables.yml`, and `director.yml` resource files with comments.
+- [x] Implement `ConfigManager` plus models (`RaidDefinition`, `EvacZoneDefinition`, `LootTableDefinition`, `LootEntry`) and soft validation.
 
 ## Phase 3 — Core Logic Skeleton
 - [ ] Define `RaidState` enum and `RaidInstance` state machine (deploy → raid → extract → end) with pure logic only.

@@ -16,7 +16,7 @@ A data-driven Paper plugin that delivers an extraction-style raid loop for Minec
 - **Reset/Cleanup:** restore players to lobby, cancel tasks, reset containers, and clear entities/effects.
 
 ## Repository Status
-Gradle scaffolding is in place for a cloud-safe build. See `TODO.md` for the implementation roadmap that keeps `./gradlew clean build` passing during the cloud phase.
+Gradle scaffolding is in place for a cloud-safe build, plugin metadata (`plugin.yml`) plus the base `RaidExtractionPlugin` lifecycle have been stubbed, and Phase 2 configuration files now load via `ConfigManager`. See `TODO.md` for the implementation roadmap that keeps `./gradlew clean build` passing during the cloud phase.
 
 ## Build & Requirements
 - Java 21 toolchain (configured in Gradle).
@@ -81,9 +81,10 @@ raidextraction/
     config.yml
     raids.yml
     loot_tables.yml
+    director.yml
 ```
 
-## Config Files (planned)
+## Config Files
 - **config.yml:** global settings (debug flags, lobby spawn, defaults).
 - **raids.yml:** raid definitions (world, lobby spawn, raid region, player spawns, evac zones, duration).
 - **loot_tables.yml:** named loot tables with weighted entries (material, amount range, enchantments later).
