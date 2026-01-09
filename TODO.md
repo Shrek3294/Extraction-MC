@@ -22,17 +22,17 @@ This TODO tracks the cloud-safe implementation path for the Raid Extraction Pape
 
 ## Phase 3 — Core Logic Skeleton
 - [x] Define `RaidState` enum and `RaidInstance` state machine (deploy → raid → extract → end) with pure logic only.
-- [ ] Add `RaidManager` and `QueueManager` for routing and queue handling.
+- [x] Add `RaidManager` and `QueueManager` for routing and queue handling.
 
 ## Phase 4 — Persistence & Loot (Neutral Formats)
-- [ ] Implement SQLite-backed `StashRepository` and `StashService` using neutral `ItemData` representation.
-- [ ] Implement `LootTableRegistry` and `LootService` with weighted rolls and injectable RNG seed.
+- [x] Implement SQLite-backed `StashRepository` and `StashService` using neutral `ItemData` representation.
+- [x] Implement `LootTableRegistry` and `LootService` with weighted rolls and injectable RNG seed.
 
 ## Phase 5 — Extraction Logic
-- [ ] Add `ExtractionService` and `EvacTracker` for countdown handling and idempotent completion.
+- [x] Add `ExtractionService` and `EvacTracker` for countdown handling and idempotent completion.
 
 ## Phase 6 — Commands & Listeners (Stubs)
-- [ ] Provide skeleton commands (`RaidCommand`, `StashCommand`, admin) and listener stubs that delegate to managers.
+- [x] Provide skeleton commands (`RaidCommand`, `StashCommand`, admin) and listener stubs that delegate to managers.
 
 ## Phase 7 — Documentation & Integration Checklist
 - [ ] Expand README with local Paper testing steps, integration hooks (teleport, inventory snapshot, region checks, GUI stash, chest filling), and cloud/local notes.
