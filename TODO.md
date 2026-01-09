@@ -25,8 +25,8 @@ This TODO tracks the cloud-safe implementation path for the Raid Extraction Pape
 - [x] Add `RaidManager` and `QueueManager` for routing and queue handling.
 
 ## Phase 4 — Persistence & Loot (Neutral Formats)
-- [ ] Implement SQLite-backed `StashRepository` and `StashService` using neutral `ItemData` representation.
-- [ ] Implement `LootTableRegistry` and `LootService` with weighted rolls and injectable RNG seed.
+- [x] Implement SQLite-backed `StashRepository` and `StashService` using neutral `ItemData` representation.
+- [x] Implement `LootTableRegistry` and `LootService` with weighted rolls and injectable RNG seed.
 
 ## Phase 5 — Extraction Logic
 - [ ] Add `ExtractionService` and `EvacTracker` for countdown handling and idempotent completion.
