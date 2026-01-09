@@ -16,7 +16,7 @@ A data-driven Paper plugin that delivers an extraction-style raid loop for Minec
 - **Reset/Cleanup:** restore players to lobby, cancel tasks, reset containers, and clear entities/effects.
 
 ## Repository Status
-Gradle scaffolding is in place for a cloud-safe build, plugin metadata (`plugin.yml`) plus the base `RaidExtractionPlugin` lifecycle have been stubbed, and Phase 2 configuration files now load via `ConfigManager`. See `TODO.md` for the implementation roadmap that keeps `./gradlew clean build` passing during the cloud phase.
+Core raid loop services (queue → raid → loot → extract → stash), stash persistence, extraction countdowns, and command/listener stubs are in place for the cloud-safe build phase. See `TODO.md` for the implementation roadmap and the local development checklist that resumes once a Paper server is available.
 
 ## Build & Requirements
 - Java 21 toolchain (configured in Gradle).
@@ -29,13 +29,17 @@ Gradle scaffolding is in place for a cloud-safe build, plugin metadata (`plugin.
 - **Java:** 21 (match your chosen Paper version).
 - **Build Tool:** Gradle (Kotlin DSL or Groovy). Shade dependencies later only if required.
 
-## File/Package Layout (planned)
+## File/Package Layout
 ```
 raidextraction/
   build.gradle.kts
   settings.gradle.kts
-  src/main/java/com/yourname/raidextraction/
+  src/main/java/com/raidextraction/
     RaidExtractionPlugin.java
+    command/
+      RaidCommand.java
+      StashCommand.java
+      RaidAdminCommand.java
     config/
       ConfigManager.java
       model/
@@ -43,39 +47,25 @@ raidextraction/
         EvacZoneDefinition.java
         LootTableDefinition.java
         LootEntry.java
+    extraction/
+      EvacTracker.java
+      ExtractionService.java
+    listener/
+      RaidListener.java
+      ExtractionListener.java
+    loot/
+      LootService.java
+      LootTableRegistry.java
     raid/
       RaidManager.java
       RaidInstance.java
       RaidState.java
-    queue/QueueManager.java
-    loot/
-      LootService.java
-      LootTableRegistry.java
-    extraction/
-      ExtractionService.java
-      EvacTracker.java
+      QueueManager.java
     stash/
+      ItemData.java
+      SQLiteStashRepository.java
+      StashRepository.java
       StashService.java
-      StashInventory.java
-      db/
-        Database.java
-        StashRepository.java
-    util/
-      ItemStackSerializer.java
-      Region.java
-      Cuboid.java
-      TaskUtil.java
-      Msg.java
-    listeners/
-      PlayerJoinQuitListener.java
-      PlayerDeathListener.java
-      InventoryListener.java
-      MovementListener.java
-      CommandListener.java
-    commands/
-      RaidCommand.java
-      StashCommand.java
-      AdminCommand.java
   src/main/resources/
     plugin.yml
     config.yml
@@ -99,15 +89,25 @@ raidextraction/
 
 ## Cloud vs. Local Workflow
 - **Cloud phase:** implement pure logic, configuration parsing, and persistence that compiles without running Paper. Keep builds passing with `./gradlew clean build`.
-- **Local integration:** later wire in Bukkit hooks (teleports, inventory snapshot/restore, region checks, GUI stash, chest filling) and validate in a Paper server.
+- **Local integration:** wire Bukkit hooks (teleports, inventory snapshot/restore, region checks, GUI stash, chest filling) and validate in a Paper server.
 
 ## Local Testing (when integrating)
 1. Download the target Paper server JAR (matching version above).
-2. Build the plugin: `./gradlew clean build`.
-3. Copy the shaded/compiled plugin JAR into `plugins/` in the Paper server directory.
-4. Start Paper locally; configure `config.yml`, `raids.yml`, and `loot_tables.yml` under `plugins/RaidExtraction/`.
-5. Verify the flow: `/raid join`, start raid, loot, extract, check stash persistence via `/stash`.
-6. Test failure cases: death, quit mid-raid, timeout, extraction spam, and server restarts during extraction.
+2. Ensure the Gradle wrapper is available (run `./scripts/fetch-gradle-wrapper.sh` or provide the wrapper JAR locally).
+3. Build the plugin: `./gradlew clean build`.
+4. Copy the plugin JAR into `plugins/` in the Paper server directory.
+5. Start Paper locally; configure `config.yml`, `raids.yml`, and `loot_tables.yml` under `plugins/RaidExtraction/`.
+6. Verify the flow: `/raid join`, `/raidadmin start`, loot, extract, check stash persistence via `/stash`.
+7. Test failure cases: death, quit mid-raid, timeout, extraction spam, and server restarts during extraction.
+
+## Integration Checklist (local)
+- **Raid deploy:** implement teleport/spawn logic and region checks before switching to `IN_RAID`.
+- **Inventory snapshot/restore:** capture inventories on raid start, restore on failure, and commit on extraction.
+- **Loot spawn:** fill chests or drop loot using `LootService` and `LootTableRegistry`.
+- **Evac zones:** hook movement/listener logic to start/cancel evac countdowns and to mark extraction complete.
+- **Stash UI:** provide a GUI or command flow to inspect stash contents and withdraw items.
+- **Admin tooling:** extend `/raidadmin` for force-extract, raid cancel, and diagnostic status.
+- **Resilience:** handle server restarts by rehydrating active raids and eviction of stale evac timers.
 
 ## Common Pitfalls
 - Spaghetti state changes: always use the instance to transition states.
