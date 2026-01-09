@@ -29,5 +29,31 @@ This repository hosts the Raid Extraction (Paper) plugin. Follow these guardrail
 ## File Conventions
 - Use Java 21+ compatible code that matches the targeted Paper version.
 - Keep config schemas readable with comments for future iteration.
+- When unsure, keep the implementation minimal and integration-friendly.
 
-When unsure, keep the implementation minimal and integration-friendly.
+## Non-Goals / Do Not Do
+- Do not rename packages, move modules, or perform large refactors unless explicitly asked.
+- Do not change command/permission semantics without updating `plugin.yml` and README.
+- Do not delete branches/tags or rewrite git history.
+- Do not introduce new dependencies unless required and justified in the PR summary.
+- Do not commit binaries (Paper jars, Gradle wrapper jar, server folders, worlds, logs, databases).
+
+## Branch / PR Workflow
+- Target branch for changes: `Cloud` (until the repo trunk is switched).
+- Keep PRs small (one task per PR) and prefer incremental commits.
+- Use conventional commits: `feat:`, `fix:`, `docs:`, `chore:`.
+- If build files/config schemas change, include "Migration Notes" in the PR summary.
+
+## Threading Rules (Paper)
+- Main thread only: inventory/ItemStack, teleport, world/entity access, chests/containers, UI (bossbar/scoreboard), permissions.
+- Async allowed: SQLite I/O, YAML parsing, pure loot roll math, queue/state-machine calculations.
+- Pattern: compute async → apply results sync via scheduler.
+
+## Integration Boundaries
+- Core logic should not depend on Bukkit/Paper types (`Player`, `ItemStack`, `Location`).
+- Use neutral models (`ItemData`, UUIDs, simple structs) in core.
+- Define interfaces in core for Paper-only concerns and implement them in adapter/listener layers.
+
+## TODO Discipline
+- Each TODO should include owner component + scope (CLOUD or INTEGRATION) and a definition of done.
+- Prefer: `TODO(INTEGRATION): <component> — <done criteria>`
