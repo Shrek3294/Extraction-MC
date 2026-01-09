@@ -32,7 +32,7 @@ This TODO tracks the cloud-safe implementation path for the Raid Extraction Pape
 - [x] Add `ExtractionService` and `EvacTracker` for countdown handling and idempotent completion.
 
 ## Phase 6 — Commands & Listeners (Stubs)
-- [ ] Provide skeleton commands (`RaidCommand`, `StashCommand`, admin) and listener stubs that delegate to managers.
+- [x] Provide skeleton commands (`RaidCommand`, `StashCommand`, admin) and listener stubs that delegate to managers.
 
 ## Phase 7 — Documentation & Integration Checklist
 - [ ] Expand README with local Paper testing steps, integration hooks (teleport, inventory snapshot, region checks, GUI stash, chest filling), and cloud/local notes.
