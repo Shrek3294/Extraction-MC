@@ -21,8 +21,8 @@ This TODO tracks the cloud-safe implementation path for the Raid Extraction Pape
 - [x] Implement `ConfigManager` plus models (`RaidDefinition`, `EvacZoneDefinition`, `LootTableDefinition`, `LootEntry`) and soft validation.
 
 ## Phase 3 — Core Logic Skeleton
-- [ ] Define `RaidState` enum and `RaidInstance` state machine (deploy → raid → extract → end) with pure logic only.
-- [ ] Add `RaidManager` and `QueueManager` for routing and queue handling.
+- [x] Define `RaidState` enum and `RaidInstance` state machine (deploy → raid → extract → end) with pure logic only.
+- [x] Add `RaidManager` and `QueueManager` for routing and queue handling.
 
 ## Phase 4 — Persistence & Loot (Neutral Formats)
 - [ ] Implement SQLite-backed `StashRepository` and `StashService` using neutral `ItemData` representation.
