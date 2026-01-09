@@ -2,6 +2,15 @@
 
 This TODO tracks the cloud-safe implementation path for the Raid Extraction Paper plugin. Tasks are organized so `./gradlew clean build` should remain green without requiring a running Paper server.
 
+## Phase 8 — Build/Release Automation
+- [ ] `TODO(V1)` Add GitHub Actions CI to run `./gradlew clean build` on push/PR with Gradle caching.
+- [ ] `TODO(V1)` Add a Gradle release task that outputs to `build/libs/` with a predictable name (append version if helpful).
+- [ ] `TODO(V1)` Add a release checklist in `docs/releasing.md` (bump version → build → smoke test → tag).
+
+## Integration Adapters & Local Harness
+- [ ] `TODO(INTEGRATION)` Add adapter interfaces (`InventorySnapshotService`, `RegionProvider`, `TeleportService`) so Paper wiring is isolated.
+- [ ] `TODO(INTEGRATION)` Add a `/server/` gitignored local harness and a Gradle copy task for a one-command loop.
+
 ## Environment / Test Warnings
 - `./scripts/fetch-gradle-wrapper.sh` currently fails in this environment because the Gradle distribution download is blocked by
   a proxy (HTTP 403). To proceed, manually place the wrapper JAR or pre-download the distribution ZIP before rerunning.
