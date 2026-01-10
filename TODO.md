@@ -2,14 +2,9 @@
 
 This TODO tracks the cloud-safe implementation path for the Raid Extraction Paper plugin. Tasks are organized so `./gradlew clean build` should remain green without requiring a running Paper server.
 
-## Phase 8 — Build/Release Automation
-- [ ] `TODO(V1)` Add GitHub Actions CI to run `./gradlew clean build` on push/PR with Gradle caching.
-- [ ] `TODO(V1)` Add a Gradle release task that outputs to `build/libs/` with a predictable name (append version if helpful).
-- [ ] `TODO(V1)` Add a release checklist in `docs/releasing.md` (bump version → build → smoke test → tag).
-
-## Integration Adapters & Local Harness
-- [ ] `TODO(INTEGRATION)` Add adapter interfaces (`InventorySnapshotService`, `RegionProvider`, `TeleportService`) so Paper wiring is isolated.
-- [ ] `TODO(INTEGRATION)` Add a `/server/` gitignored local harness and a Gradle copy task for a one-command loop.
+## Phase Mapping — Cloud-Safe vs Integration
+- [ ] Cloud-safe phases: 0–8 (no Paper server required).
+- [ ] Integration-only work: the Local Development Checklist and any `TODO(INTEGRATION)` items.
 
 ## Environment / Test Warnings
 - `./scripts/fetch-gradle-wrapper.sh` currently fails in this environment because the Gradle distribution download is blocked by
@@ -47,108 +42,14 @@ This TODO tracks the cloud-safe implementation path for the Raid Extraction Pape
 - [x] Expand README with local Paper testing steps, integration hooks (teleport, inventory snapshot, region checks, GUI stash, chest filling), and cloud/local notes.
 - [x] Keep TODOs tagged (`TODO(V1)`, `TODO(INTEGRATION)`, `TODO(V2)`) and update this roadmap as features land.
 
-## Economy & Progression Guardrails (Design Rules)
-Use this section as the balancing north star while implementing loot, vendors, and progression.
+## Phase 8 — Build/Release Automation
+- [ ] `TODO(V1)` Add GitHub Actions CI to run `./gradlew clean build` on push/PR with Gradle caching.
+- [ ] `TODO(V1)` Add a Gradle release task that outputs to `build/libs/` with a predictable name (append version if helpful).
+- [ ] `TODO(V1)` Add a release checklist in `docs/releasing.md` (bump version → build → smoke test → tag).
 
-### 1) Progression model that stays fair (mostly horizontal)
-**Player progression tracks**
-- **Reputation (per vendor/faction):** Unlocks access (attachments, meds, ammo types, keys), not raw damage multipliers. Rep rises via extracts/quests and drops slightly on deaths (small, not brutal).
-- **Stash/Base upgrades:** Unlocks convenience/economy levers (stash size, craft slots, insurance slots, scav stipend frequency). Primary “numbers go up” track without ruining PvP.
-- **Weapon mastery:** Small handling bonuses (reload/swap speed, recoil smoothing). Avoid +damage/+armor as mastery rewards.
-
-**Power ceiling rule**
-- Cap practical PvP power around **Tier 2–3**. Tier 4 should be economy/quest artifacts, keys, cosmetics, or flex items—not “instantly win fights.”
-
-### 2) Loot economy: make losses recoverable
-**Budget Kit Guarantee (must-have):** Every player can always assemble a viable kit in 1–2 runs. Implement **any 2**:
-- Scav run (free kit, lower loot multiplier, no rep gain)
-- Daily/hourly stipend crate (basic meds + ammo + weak weapon OR barter junk)
-- Vendor “budget kit” (fixed cheap loadout, always available)
-- Craft-from-junk (common junk → ammo/meds)
-
-### 3) Loot balancing that creates hot zones without destroying fairness
-**Server-wide 60 / 30 / 10 rule (per hour):**
-- 60% Tier 0–1
-- 30% Tier 2
-- 10% Tier 3–4
-
-**Map zoning (per `RaidDefinition`):**
-- STARTER: consistent Tier 1, low Tier 2
-- MID: Tier 1–2 steady
-- HOT: Tier 2–3 + rare Tier 4 artifacts
-- LOCKED (key door): tiny area, very high value density
-
-### 4) Director system: dynamic scarcity without SBMM
-Track rolling counters (SQLite or memory + periodic flush):
-- `spawned_count[item_id]`
-- `extracted_count[item_id]`
-- `lost_count[item_id]` (died/timeout)
-
-**Scarcity multiplier:** If too much extracted → reduce spawn weight 5–15%; if too little exists → increase spawn weight 5–15%. Clamp to **0.6–1.4**.
-
-### 5) Concrete tier + scoring system for fairness
-**Loadout Score (raid start):**
-- Weapon tier 0/1/2/3 → +0/+8/+16/+24
-- Armor tier 0/1/2/3 → +0/+10/+20/+30
-- Ammo tier 0/1/2/3 → +0/+6/+12/+18
-- Meds tier 0/1/2/3 → +0/+5/+10/+15
-- Utility tier 0/1/2/3 → +0/+4/+8/+12
-
-**Total:** ~0–87. Use for optional queue bands later and starter protection.
-
-**Starter protection (avoid SBMM feel):**
-- Restrict HOT/LOCKED zones for first N raids (soft gates like alarms + NPC spawns), or
-- Spawn closer to safer extracts, or
-- Reduce chance of instancing into high-score lobbies (later).
-
-### 6) Loot tables that won’t implode the economy
-**Categories to define in `loot_tables.yml`:**
-- BARTR_COMMON, BARTR_RARE
-- MED_BASIC, MED_GOOD
-- AMMO_LOW, AMMO_GOOD, AMMO_AP (AP rare/expensive)
-- WEAPON_T1, WEAPON_T2, WEAPON_T3 (T3 low rate)
-- ATTACH_T1, ATTACH_T2, ATTACH_T3
-- KEYS (very low rate)
-- ARTIFACTS (rare; economy/quests)
-
-**Container identity (learnability):**
-- Medical: meds only (higher tier chance)
-- Ammo box: ammo + small attach chance
-- Weapon case: weapon + attachment
-- Tech crate: barter + keys + artifacts
-- Duffle: mixed low-mid
-
-### 7) Risk tuning: insurance + extracts + keys
-**Insurance (balanced):** Insure 1–2 items early. Return only if not extracted by others. Return after delay. Returned items can be damaged, requiring repair junk.
-
-**Keys drive route variety:** Keys rare but not impossible. Key rooms: high value density, louder entry (alarm), more exposure time, limited nearby extracts.
-
-### 8) Starter defaults (numbers to copy into configs)
-- `raid_duration_minutes`: 12–18 (map-size dependent)
-- `loot_rolls_per_container`:
-  - duffle: 1–2
-  - ammo: 2–3 (small items)
-  - med: 2–3
-  - tech: 2–4
-  - weapon_case: 1 (weapon) + 1 (attach chance)
-- `tier_distribution_by_zone`:
-  - STARTER: T0-1 80%, T2 19%, T3 1%, T4 0%
-  - MID: T0-1 60%, T2 35%, T3 4%, T4 1%
-  - HOT: T0-1 40%, T2 45%, T3 12%, T4 3%
-  - LOCKED: T0-1 15%, T2 45%, T3 30%, T4 10%
-- `scarcity_multiplier_clamp`: [0.6, 1.4]
-- `scarcity_adjust_rate`: 0.05–0.15 per evaluation window
-- `evaluation_window_minutes`: 30–60
-
-### 9) TODO phase mapping (cloud-safe vs integration)
-**Now (cloud-safe / pure logic):**
-- Add tier metadata to loot entries (or infer tier from table name).
-- Add director multiplier layer: `finalWeight = baseWeight * multiplier(itemId or category)`.
-- Add loot profiles per raid/zone (even if `RegionProvider` is stubbed; simulate region tags).
-
-**Later (Paper wiring):**
-- `RegionProvider` resolves zone profile.
-- Chest filling uses the profile’s container types + loot tables.
+## Integration Adapters & Local Harness
+- [ ] `TODO(INTEGRATION)` Add adapter interfaces (`InventorySnapshotService`, `RegionProvider`, `TeleportService`) so Paper wiring is isolated.
+- [ ] `TODO(INTEGRATION)` Add a `/server/` gitignored local harness and a Gradle copy task for a one-command loop.
 
 ## Local Development Checklist (Paper Integration)
 Use this checklist once a local Paper server is available. The cloud phase is complete; remaining work depends on Bukkit/Paper APIs.
