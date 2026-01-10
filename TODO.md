@@ -2,6 +2,10 @@
 
 This TODO tracks the cloud-safe implementation path for the Raid Extraction Paper plugin. Tasks are organized so `./gradlew clean build` should remain green without requiring a running Paper server.
 
+## Phase Mapping — Cloud-Safe vs Integration
+- [ ] Cloud-safe phases: 0–8 (no Paper server required).
+- [ ] Integration-only work: the Local Development Checklist and any `TODO(INTEGRATION)` items.
+
 ## Environment / Test Warnings
 - `./scripts/fetch-gradle-wrapper.sh` currently fails in this environment because the Gradle distribution download is blocked by
   a proxy (HTTP 403). To proceed, manually place the wrapper JAR or pre-download the distribution ZIP before rerunning.
@@ -37,6 +41,15 @@ This TODO tracks the cloud-safe implementation path for the Raid Extraction Pape
 ## Phase 7 — Documentation & Integration Checklist
 - [x] Expand README with local Paper testing steps, integration hooks (teleport, inventory snapshot, region checks, GUI stash, chest filling), and cloud/local notes.
 - [x] Keep TODOs tagged (`TODO(V1)`, `TODO(INTEGRATION)`, `TODO(V2)`) and update this roadmap as features land.
+
+## Phase 8 — Build/Release Automation
+- [ ] `TODO(V1)` Add GitHub Actions CI to run `./gradlew clean build` on push/PR with Gradle caching.
+- [ ] `TODO(V1)` Add a Gradle release task that outputs to `build/libs/` with a predictable name (append version if helpful).
+- [ ] `TODO(V1)` Add a release checklist in `docs/releasing.md` (bump version → build → smoke test → tag).
+
+## Integration Adapters & Local Harness
+- [ ] `TODO(INTEGRATION)` Add adapter interfaces (`InventorySnapshotService`, `RegionProvider`, `TeleportService`) so Paper wiring is isolated.
+- [ ] `TODO(INTEGRATION)` Add a `/server/` gitignored local harness and a Gradle copy task for a one-command loop.
 
 ## Local Development Checklist (Paper Integration)
 Use this checklist once a local Paper server is available. The cloud phase is complete; remaining work depends on Bukkit/Paper APIs.
