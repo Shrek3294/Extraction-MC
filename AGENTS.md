@@ -39,7 +39,7 @@ This repository hosts the Raid Extraction (Paper) plugin. Follow these guardrail
 - Do not commit binaries (Paper jars, Gradle wrapper jar, server folders, worlds, logs, databases).
 
 ## Branch / PR Workflow
-- Target branch for changes: `Cloud` (until the repo trunk is switched).
+- Target branch for changes: `Cloud` (authoritative) with `main-cleanup` as the staging branch for the trunk swap; do not base new work on the legacy `main`.
 - Keep PRs small (one task per PR) and prefer incremental commits.
 - Use conventional commits: `feat:`, `fix:`, `docs:`, `chore:`.
 - If build files/config schemas change, include "Migration Notes" in the PR summary.

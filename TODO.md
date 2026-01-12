@@ -2,6 +2,8 @@
 
 This TODO tracks the cloud-safe implementation path for the Raid Extraction Paper plugin. Tasks are organized so `./gradlew clean build` should remain green without requiring a running Paper server.
 
+- Trunk status: `Cloud`/`main-cleanup` contain the live plugin code; `main` remains as a legacy scaffold for history only.
+
 ## Phase Mapping — Cloud-Safe vs Integration
 - [ ] Cloud-safe phases: 0–8 (no Paper server required).
 - [ ] Integration-only work: the Local Development Checklist and any `TODO(INTEGRATION)` items.

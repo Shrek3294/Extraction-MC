@@ -2,6 +2,28 @@
 
 A data-driven Paper plugin that delivers an extraction-style raid loop for Minecraft: queue players, deploy into a raid region, loot, survive PvE (and later PvP), and extract to keep rewards. Player stash data persists via SQLite so only extracted loot is saved.
 
+## Branches & Trunk Migration
+- `Cloud`: authoritative trunk for all active development (base new work here).
+- `main-cleanup`: staging branch (this branch) to replace the legacy `main` once docs/hygiene land.
+- `main` (legacy): old scaffold kept for history; the live plugin code is on `Cloud`/`main-cleanup`, not `main`.
+
+## Branch Audit & Recommendations
+- `Cloud`: active trunk; keep as the base for feature work.
+- `main-cleanup`: staging branch for the trunk swap; keep in lockstep with `Cloud` until the default branch flips.
+- `main`: legacy Docker/Makefile scaffold; keep for history only.
+- `Local`: initial scaffold commit that is already merged into `Cloud`; safe to archive after the trunk swap.
+- `codex/standardize-hybrid-environment-setup`: Docker/Makefile environment setup (legacy scaffold); archive.
+- `codex/merge-pull-request` (raid/queue managers): merged into `Cloud`; archive.
+- `codex/merge-pull-request-0fhcfl` (command/listener stubs): merged into `Cloud`; archive.
+- `codex/merge-pull-request-a71a2h` (extraction countdown tracking): merged into `Cloud`; archive.
+- `codex/merge-pull-request-zw3gpm` (stash persistence + loot services): merged into `Cloud`; archive.
+- `codex/merge-pull-request-qu4ovb` (local integration checklist docs): merged into `Cloud`; archive.
+- `codex/add-progression-model-and-loot-economy-rules` (economy/progression guardrails): merged into `Cloud`; archive.
+- `codex/create-documentation-for-raid-extraction-plugin` (Gradle download warnings + docs): merged into `Cloud`; archive.
+- `codex/update-todo.md-with-phase-8-goals` and `...-rrk7ic` (roadmap updates): merged into `Cloud`; archive.
+- `codex/work-on-next-cloud-to-do-feature` (raid state machine skeleton): merged into `Cloud`; archive.
+- `codex/work-on-next-cloud-to-do-feature-dwyfj8` (queue/raid manager work plus a `Cloud` merge): review diffs vs `Cloud`; if no unique logic, archive.
+
 ## Project Goals
 - **Core loop:** queue → deploy → raid → extract → stash commit.
 - **Data-driven design:** YAML configs define raids, loot tables, and evac zones for quick iteration.
