@@ -20,9 +20,9 @@ Core raid loop services (queue → raid → loot → extract → stash), stash p
 
 ## Build & Requirements
 - Java 21 toolchain (configured in Gradle).
-- Gradle wrapper binary is **not** committed to keep binaries out of the repo. Run `./scripts/fetch-gradle-wrapper.sh` once to
-  download it from the configured `distributionUrl` before running any Gradle tasks.
-- After bootstrapping the wrapper, run `./gradlew clean build` to compile and execute unit tests.
+- Gradle wrapper binary is **not** committed to keep binaries out of the repo. Run `./scripts/fetch-gradle-wrapper.sh` (Git Bash
+  on Windows) or drop `gradle/wrapper/gradle-wrapper.jar` locally before running any Gradle tasks. Do not commit the wrapper JAR.
+- After bootstrapping the wrapper, run `./gradlew clean build` to compile and execute unit tests (`.\gradlew.bat` on Windows).
 
 ## Recommended Versions
 - **Paper:** latest stable 1.21.x (or 1.20.1 for ecosystem stability).
@@ -90,6 +90,17 @@ raidextraction/
 ## Cloud vs. Local Workflow
 - **Cloud phase:** implement pure logic, configuration parsing, and persistence that compiles without running Paper. Keep builds passing with `./gradlew clean build`.
 - **Local integration:** wire Bukkit hooks (teleports, inventory snapshot/restore, region checks, GUI stash, chest filling) and validate in a Paper server.
+
+## Local Development (Windows + VS Code)
+1. Install Java 21 and VS Code (with Java extensions).
+2. Clone the repo and check out `Cloud` for feature work or `main-cleanup` for trunk-migration tasks.
+3. From VS Code's terminal (Git Bash preferred), run `./scripts/fetch-gradle-wrapper.sh` to download the wrapper JAR, or place
+   `gradle/wrapper/gradle-wrapper.jar` manually; keep it untracked.
+4. Build and test: `.\gradlew.bat clean build`.
+5. Create a gitignored `server/` folder at the repo root with a Paper JAR, then copy `build/libs/RaidExtraction*.jar` into
+   `server/plugins/`.
+6. Start Paper (`java -jar paper.jar --nogui` from `server/`), configure files under `plugins/RaidExtraction/`, and iterate using
+   VS Code for edits plus the integrated terminal for builds.
 
 ## Local Testing (when integrating)
 1. Download the target Paper server JAR (matching version above).
