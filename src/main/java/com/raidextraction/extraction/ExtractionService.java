@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -43,6 +44,13 @@ public final class ExtractionService {
         return ExtractionResult.EXTRACTED;
     }
 
+    public void forceComplete(String raidId, UUID playerId) {
+        Objects.requireNonNull(raidId, "raidId");
+        Objects.requireNonNull(playerId, "playerId");
+        evacTracker.cancelCountdown(raidId, playerId);
+        extractedPlayers.computeIfAbsent(raidId, key -> new HashSet<>()).add(playerId);
+    }
+
     public void cancelExtraction(String raidId, UUID playerId) {
         Objects.requireNonNull(raidId, "raidId");
         Objects.requireNonNull(playerId, "playerId");
@@ -54,6 +62,12 @@ public final class ExtractionService {
         Objects.requireNonNull(playerId, "playerId");
         Set<UUID> extracted = extractedPlayers.get(raidId);
         return extracted != null && extracted.contains(playerId);
+    }
+
+    public Duration remaining(String raidId, UUID playerId) {
+        Objects.requireNonNull(raidId, "raidId");
+        Objects.requireNonNull(playerId, "playerId");
+        return evacTracker.remaining(raidId, playerId);
     }
 
     public Set<UUID> extractedPlayers(String raidId) {
@@ -69,6 +83,14 @@ public final class ExtractionService {
         Objects.requireNonNull(raidId, "raidId");
         evacTracker.clearRaid(raidId);
         extractedPlayers.remove(raidId);
+    }
+
+    public List<EvacTracker.EvacSnapshot> evacSnapshots() {
+        return evacTracker.snapshots();
+    }
+
+    public void restoreEvacSnapshots(List<EvacTracker.EvacSnapshot> snapshots) {
+        evacTracker.restoreSnapshots(snapshots);
     }
 
     public enum ExtractionResult {

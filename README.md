@@ -37,11 +37,17 @@ A data-driven Paper plugin that delivers an extraction-style raid loop for Minec
 - **Persistence:** SQLite-backed stash storage in the plugin data folder with simple per-player blobs.
 - **Reset/Cleanup:** restore players to lobby, cancel tasks, reset containers, and clear entities/effects.
 
+## Commands
+- `/raid join|leave|status <raidId>` — status shows raid state, player counts, and remaining time for active raids.
+- `/raidadmin start <raidId>`, `stop|cancel <activeRaidId>`, `force-extract <playerName|playerUuid>` — admin controls for testing and moderation.
+- `/stash` — opens a stash GUI for browsing and withdrawing extracted loot (persistence runs off-thread, results synced on the main thread).
+
 ## Repository Status
 Core raid loop services (queue → raid → loot → extract → stash), stash persistence, extraction countdowns, and command/listener stubs are in place for the cloud-safe build phase. See `TODO.md` for the implementation roadmap and the local development checklist that resumes once a Paper server is available.
 
 ## Build & Requirements
-- Java 21 toolchain (configured in Gradle).
+- Java 21 toolchain (configured in Gradle and auto-downloaded via the Foojay resolver if Java 21 is missing; first build needs
+  network access).
 - Gradle wrapper binary is **not** committed to keep binaries out of the repo. Run `./scripts/fetch-gradle-wrapper.sh` (Git Bash
   on Windows) or drop `gradle/wrapper/gradle-wrapper.jar` locally before running any Gradle tasks. Do not commit the wrapper JAR.
 - After bootstrapping the wrapper, run `./gradlew clean build` to compile and execute unit tests (`.\gradlew.bat` on Windows).
@@ -72,6 +78,21 @@ raidextraction/
     extraction/
       EvacTracker.java
       ExtractionService.java
+    integration/
+      InventorySnapshotService.java
+      ItemDataMapper.java
+      RaidLifecycleCoordinator.java
+      RegionProvider.java
+      TeleportService.java
+      paper/
+        PaperInventorySnapshotService.java
+        PaperRegionProvider.java
+        PaperTeleportService.java
+        StashView.java
+      stub/
+        NoopInventorySnapshotService.java
+        NoopRegionProvider.java
+        NoopTeleportService.java
     listener/
       RaidListener.java
       ExtractionListener.java
@@ -97,10 +118,11 @@ raidextraction/
 ```
 
 ## Config Files
-- **config.yml:** global settings (debug flags, lobby spawn, defaults).
+- **config.yml:** global settings (debug flags, lobby spawn, evac countdown duration).
 - **raids.yml:** raid definitions (world, lobby spawn, raid region, player spawns, evac zones, duration).
 - **loot_tables.yml:** named loot tables with weighted entries (material, amount range, enchantments later).
 - **director.yml:** placeholder for threat curves/events (future).
+- **raid_state.yml:** transient snapshot of active raids and evac timers for restart rehydration (auto-managed).
 
 ## Development Principles
 - Keep listeners thin; delegate logic to services and managers.
@@ -118,28 +140,30 @@ raidextraction/
 2. Clone the repo and check out `Cloud` for feature work or `main-cleanup` for trunk-migration tasks.
 3. From VS Code's terminal (Git Bash preferred), run `./scripts/fetch-gradle-wrapper.sh` to download the wrapper JAR, or place
    `gradle/wrapper/gradle-wrapper.jar` manually; keep it untracked.
-4. Build and test: `.\gradlew.bat clean build`.
-5. Create a gitignored `server/` folder at the repo root with a Paper JAR, then copy `build/libs/RaidExtraction*.jar` into
-   `server/plugins/`.
+4. Build and test: `.\gradlew.bat clean build` (first run will auto-download JDK 21 via Foojay if missing).
+5. Create a gitignored `server/` folder at the repo root with a Paper JAR, then run `.\gradlew.bat copyPluginToServer`
+   (uses `server/plugins/` by default; override with `-PserverDir=../my-server`).
 6. Start Paper (`java -jar paper.jar --nogui` from `server/`), configure files under `plugins/RaidExtraction/`, and iterate using
    VS Code for edits plus the integrated terminal for builds.
 
 ## Local Testing (when integrating)
 1. Download the target Paper server JAR (matching version above).
 2. Ensure the Gradle wrapper is available (run `./scripts/fetch-gradle-wrapper.sh` or provide the wrapper JAR locally).
-3. Build the plugin: `./gradlew clean build`.
-4. Copy the plugin JAR into `plugins/` in the Paper server directory.
+3. Build the plugin: `./gradlew clean build` (downloads JDK 21 automatically if needed).
+4. Copy the plugin JAR into `plugins/` in the Paper server directory (`./gradlew copyPluginToServer -PserverDir=/path/to/server`).
 5. Start Paper locally; configure `config.yml`, `raids.yml`, and `loot_tables.yml` under `plugins/RaidExtraction/`.
 6. Verify the flow: `/raid join`, `/raidadmin start`, loot, extract, check stash persistence via `/stash`.
 7. Test failure cases: death, quit mid-raid, timeout, extraction spam, and server restarts during extraction.
 
 ## Integration Checklist (local)
+Adapter interfaces (`InventorySnapshotService`, `RegionProvider`, `TeleportService`) are stubbed; implement them when wiring
+Paper APIs.
 - **Raid deploy:** implement teleport/spawn logic and region checks before switching to `IN_RAID`.
 - **Inventory snapshot/restore:** capture inventories on raid start, restore on failure, and commit on extraction.
 - **Loot spawn:** fill chests or drop loot using `LootService` and `LootTableRegistry`.
 - **Evac zones:** hook movement/listener logic to start/cancel evac countdowns and to mark extraction complete.
-- **Stash UI:** provide a GUI or command flow to inspect stash contents and withdraw items.
-- **Admin tooling:** extend `/raidadmin` for force-extract, raid cancel, and diagnostic status.
+- **Stash UI:** `/stash` opens the stash GUI; validate withdraw flows and persistence on a live server.
+- **Admin tooling:** `/raidadmin start|stop|cancel|force-extract` available for raid control; verify messaging/state in Paper.
 - **Resilience:** handle server restarts by rehydrating active raids and eviction of stale evac timers.
 
 ## Common Pitfalls

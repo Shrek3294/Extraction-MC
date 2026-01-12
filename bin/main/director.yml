@@ -1,0 +1,7 @@
+# Director settings for raid pacing and events. Placeholder until threat curves are implemented.
+# Example knobs: difficulty multiplier, ambient events, and spawn pacing overrides.
+
+director:
+  enabled: false
+  difficulty_scale: 1.0
+  notes: "Configure encounter pacing in a future phase."

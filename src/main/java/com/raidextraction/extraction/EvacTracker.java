@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -60,6 +61,33 @@ public final class EvacTracker {
         activeEntries.keySet().removeIf(key -> key.raidId.equals(raidId));
     }
 
+    public List<EvacSnapshot> snapshots() {
+        if (activeEntries.isEmpty()) {
+            return List.of();
+        }
+        return activeEntries.entrySet().stream()
+                .map(entry -> new EvacSnapshot(
+                        entry.getKey().raidId,
+                        entry.getKey().playerId,
+                        entry.getValue().zoneName,
+                        entry.getValue().startedAt,
+                        entry.getValue().duration))
+                .toList();
+    }
+
+    public void restoreSnapshots(List<EvacSnapshot> snapshots) {
+        if (snapshots == null || snapshots.isEmpty()) {
+            return;
+        }
+        for (EvacSnapshot snapshot : snapshots) {
+            if (snapshot == null) {
+                continue;
+            }
+            EvacKey key = new EvacKey(snapshot.raidId(), snapshot.playerId());
+            activeEntries.put(key, new EvacEntry(snapshot.zoneName(), snapshot.startedAt(), snapshot.duration()));
+        }
+    }
+
     public record EvacEntry(String zoneName, Instant startedAt, Duration duration) {
         public EvacEntry {
             Objects.requireNonNull(zoneName, "zoneName");
@@ -78,6 +106,16 @@ public final class EvacTracker {
         private EvacKey {
             Objects.requireNonNull(raidId, "raidId");
             Objects.requireNonNull(playerId, "playerId");
+        }
+    }
+
+    public record EvacSnapshot(String raidId, UUID playerId, String zoneName, Instant startedAt, Duration duration) {
+        public EvacSnapshot {
+            Objects.requireNonNull(raidId, "raidId");
+            Objects.requireNonNull(playerId, "playerId");
+            Objects.requireNonNull(zoneName, "zoneName");
+            Objects.requireNonNull(startedAt, "startedAt");
+            Objects.requireNonNull(duration, "duration");
         }
     }
 }

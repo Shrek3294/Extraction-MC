@@ -20,13 +20,30 @@ public final class RaidInstance {
     private Instant stateChangedAt;
 
     public RaidInstance(String id, RaidDefinition definition, Clock clock) {
+        Instant now = Instant.now(Objects.requireNonNull(clock, "clock"));
+        this.id = Objects.requireNonNull(id, "id");
+        this.definition = Objects.requireNonNull(definition, "definition");
+        this.clock = clock;
+        this.players = new LinkedHashSet<>();
+        this.createdAt = now;
+        this.state = RaidState.LOBBY;
+        this.stateChangedAt = now;
+    }
+
+    public RaidInstance(String id,
+                        RaidDefinition definition,
+                        Clock clock,
+                        Instant createdAt,
+                        RaidState state,
+                        Instant stateChangedAt,
+                        Set<UUID> players) {
         this.id = Objects.requireNonNull(id, "id");
         this.definition = Objects.requireNonNull(definition, "definition");
         this.clock = Objects.requireNonNull(clock, "clock");
-        this.players = new LinkedHashSet<>();
-        this.createdAt = Instant.now(clock);
-        this.state = RaidState.LOBBY;
-        this.stateChangedAt = this.createdAt;
+        this.players = new LinkedHashSet<>(Objects.requireNonNullElse(players, Set.of()));
+        this.createdAt = Objects.requireNonNull(createdAt, "createdAt");
+        this.state = Objects.requireNonNullElse(state, RaidState.LOBBY);
+        this.stateChangedAt = Objects.requireNonNullElse(stateChangedAt, this.createdAt);
     }
 
     public String id() {

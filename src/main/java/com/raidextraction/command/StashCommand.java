@@ -1,21 +1,18 @@
 package com.raidextraction.command;
 
-import com.raidextraction.stash.ItemData;
-import com.raidextraction.stash.StashService;
+import com.raidextraction.integration.paper.StashView;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 public final class StashCommand implements CommandExecutor {
-    private final StashService stashService;
+    private final StashView stashView;
 
-    public StashCommand(StashService stashService) {
-        this.stashService = Objects.requireNonNull(stashService, "stashService");
+    public StashCommand(StashView stashView) {
+        this.stashView = Objects.requireNonNull(stashView, "stashView");
     }
 
     @Override
@@ -24,9 +21,7 @@ public final class StashCommand implements CommandExecutor {
             sender.sendMessage("Only players can use this command.");
             return true;
         }
-        UUID ownerId = player.getUniqueId();
-        List<ItemData> items = stashService.load(ownerId);
-        sender.sendMessage("Your stash contains " + items.size() + " item stack(s).");
+        stashView.open(player);
         return true;
     }
 }

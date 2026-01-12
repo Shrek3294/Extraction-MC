@@ -1,93 +1,93 @@
-# TODO Roadmap
+# TODO
 
-This TODO tracks the cloud-safe implementation path for the Raid Extraction Paper plugin. Tasks are organized so `./gradlew clean build` should remain green without requiring a running Paper server.
+1. V2.0: Repo / Local Harness / Release Hygiene
+   - [ ] (Owner=BuildRelease, Scope=V2.0) Add GitHub Actions CI: `./gradlew clean build` (cache Gradle). DoD: CI passes on push + PR; failures block merges.
+   - [ ] (Owner=BuildRelease, Scope=V2.0) Add `docs/releasing.md` and version bump instructions. DoD: checklist covers bump + build + smoke test + tag.
+   - [ ] (Owner=DevEx, Scope=V2.0) Document `/server/` local harness + copy task for Windows. DoD: one command builds and copies plugin jar into `/server/plugins/`.
 
-- Trunk status: `Cloud`/`main-cleanup` contain the live plugin code; `main` remains as a legacy scaffold for history only.
+2. V2.0: UI/UX Polish
+   - BossBar Raid Timer
+     - [ ] (Owner=UI, Scope=V2.0) Add BossBar showing remaining raid time for players in raid. DoD: updates every second; disappears on raid end; never leaks across raids.
+     - [ ] (Owner=UI, Scope=V2.0) Add "Raid Start" title/subtitle + sound. DoD: fires once per player per raid instance.
+   - ActionBar Extraction Countdown
+     - [ ] (Owner=UI, Scope=V2.0) Add ActionBar countdown while extracting. DoD: shows seconds remaining; cancels instantly if player leaves evac.
+     - [ ] (Owner=UI, Scope=V2.0) Add extraction progress sound/tick feedback (vanilla sounds). DoD: plays only during active extraction and stops on cancel.
+   - Failure/Success Feedback
+     - [ ] (Owner=UI, Scope=V2.0) Add success feedback (title + sound) and failure feedback (title + sound). DoD: success only on first extraction completion; failure on death/timeout/quit.
 
-## Phase Mapping — Cloud-Safe vs Integration
-- [ ] Cloud-safe phases: 0–8 (no Paper server required).
-- [ ] Integration-only work: the Local Development Checklist and any `TODO(INTEGRATION)` items.
+3. V2.0: One Real Map Support (No Instancing Yet)
+   - [ ] (Owner=Config, Scope=V2.0) Add `config.yml` keys: `lobbyWorld`, `lobbySpawn` (x,y,z,yaw,pitch), `raidWorld`. DoD: validated at startup with clear warnings if missing.
+   - [ ] (Owner=TeleportService, Scope=V2.0) Implement lobby return flow using `TeleportService`. DoD: after raid ends, all players return to lobby spawn reliably.
+   - [ ] (Owner=RegionProvider, Scope=V2.0) Implement `RegionProvider` for evac zones + raid bounds. DoD: `isInEvacZone(player, raidId)` and `isInRaidBounds(player, raidId)` work.
+   - [ ] (Owner=RegionProvider, Scope=V2.0) Enforce raid bounds (soft at first). DoD: warning + teleport back or apply effect if player leaves bounds (configurable).
 
-## Environment / Test Warnings
-- `./scripts/fetch-gradle-wrapper.sh` currently fails in this environment because the Gradle distribution download is blocked by
-  a proxy (HTTP 403). To proceed, manually place the wrapper JAR or pre-download the distribution ZIP before rerunning.
-- `./gradlew clean build --console=plain` will also fail until the wrapper JAR/distribution is available. Re-run once the
-  distribution can be fetched to confirm the build.
+4. V2.0: Stash v1 Completion
+   - [ ] (Owner=StashService, Scope=V2.0) Implement `ItemData <-> ItemStack` conversion reliably. DoD: round-trip conversion does not lose name/lore/enchantments where supported.
+   - [ ] (Owner=StashUI, Scope=V2.0) Build stash GUI (basic chest UI). DoD: `/stash` opens GUI; click withdraw moves item to inventory if space; updates stash.
+   - [ ] (Owner=StashUI, Scope=V2.0) Add pagination and a close button. DoD: supports > 54 items; no dupes; no item loss.
+   - [ ] (Owner=StashService, Scope=V2.0) Move stash DB writes off-thread + sync UI updates back to main thread. DoD: no main-thread SQLite writes; no async Bukkit calls; no race dupes.
 
-## Phase 0 — Repository Setup
-- [x] Add Gradle build with Paper API (compileOnly) and Java toolchain (21 recommended).
-- [x] Create `.gitignore`, LICENSE (MIT), and baseline README.
+5. V2.0: Raid Session Rules
+   - [ ] (Owner=RaidManager, Scope=V2.0) Lock join rules (no mid-raid join unless explicitly allowed). DoD: `/raid join` rejects if raid already in progress.
+   - [ ] (Owner=RaidManager, Scope=V2.0) Handle disconnect rules clearly. DoD: disconnect counts as failure; inventory restored; raid state cleaned.
+   - [ ] (Owner=ExtractionService, Scope=V2.0) Add simple anti-exploit checks (extraction spam protection, command spam cooldown). DoD: no double stash commits; logs show blocked attempts.
 
-## Phase 1 — Base Plugin & Metadata
-- [x] Add `plugin.yml` with commands (`raid`, `stash`, `raidadmin`) and permissions (`raid.user`, `raid.admin`).
-- [x] Implement `RaidExtractionPlugin` lifecycle with logging hooks and configuration initialization.
+6. V2.0: Admin Tools
+   - [ ] (Owner=AdminCommands, Scope=V2.0) Extend `/raid status` with ETA, state, player count, and current raidId. DoD: useful output in lobby + in raid.
+   - [ ] (Owner=AdminCommands, Scope=V2.0) Implement `/raidadmin force-extract <player>`. DoD: marks extraction success idempotently, commits loot, returns player.
+   - [ ] (Owner=AdminCommands, Scope=V2.0) Implement `/raidadmin cancel <raidId|active>`. DoD: cancels raid, restores inventories, returns to lobby, cleans instance state.
 
-## Phase 2 — Config Schemas & Loader
-- [x] Add `config.yml`, `raids.yml`, `loot_tables.yml`, and `director.yml` resource files with comments.
-- [x] Implement `ConfigManager` plus models (`RaidDefinition`, `EvacZoneDefinition`, `LootTableDefinition`, `LootEntry`) and soft validation.
+7. V2.0: QA / Smoke Tests (Manual)
+   - [ ] (Owner=QA, Scope=V2.0) Run 50+ extraction attempts; verify no double-commit and no dupes. DoD: zero double-commit or dupes observed.
+   - [ ] (Owner=QA, Scope=V2.0) Test death/timeout/quit restoration paths repeatedly. DoD: inventory restored and raid state cleaned every time.
+   - [ ] (Owner=QA, Scope=V2.0) Loot distribution sanity check (sample size 1000 rolls). DoD: observed distribution matches expected weights.
+   - [ ] (Owner=QA, Scope=V2.0) Multi-raid definitions min/max enforcement. DoD: queue and start respect min/max.
+   - [ ] (Owner=QA, Scope=V2.0) Restart server mid-raid: ensure safe cleanup behavior (even if fail closed). DoD: no corrupt state; players restored or blocked cleanly.
 
-## Phase 3 — Core Logic Skeleton
-- [x] Define `RaidState` enum and `RaidInstance` state machine (deploy → raid → extract → end) with pure logic only.
-- [x] Add `RaidManager` and `QueueManager` for routing and queue handling.
+8. V2.1: Admin Map Editor (In-Game Configuration)
+   - Foundation
+     - [ ] (Owner=MapEditorManager, Scope=V2.1) Add `MapEditorManager` and `EditorSession` tracking. DoD: multiple admins can edit different raids safely (or enforce one editor at a time).
+     - [ ] (Owner=AdminCommands, Scope=V2.1) Add commands `/raidadmin edit <raidId>`, `/raidadmin edit exit`, `/raidadmin save`, `/raidadmin validate <raidId>`. DoD: validate prints missing spawns/evacs/loot containers.
+   - Tools
+     - [ ] (Owner=MapEditorTools, Scope=V2.1) Tool: set spawn point at admin location (left click = add). DoD: stored per raid; used for player deployment.
+     - [ ] (Owner=MapEditorTools, Scope=V2.1) Tool: select two corners for cuboid evac zone (pos1/pos2). DoD: evac zone persists; RegionProvider detects it.
+     - [ ] (Owner=MapEditorTools, Scope=V2.1) Tool: mark chest as loot container for raid. DoD: chest location saved; loot fill uses this list.
+   - Storage
+     - [ ] (Owner=MapEditorStorage, Scope=V2.1) Create `locations.yml` (or `raid_locations.yml`) for editor output. DoD: editor writes locations here, not directly into `raids.yml` initially.
+     - [ ] (Owner=MapEditorStorage, Scope=V2.1) Add schema versioning (`schemaVersion: 1`). DoD: warnings on mismatch; migration notes documented.
+   - Safety and UX
+     - [ ] (Owner=MapEditorManager, Scope=V2.1) Prevent editing while raid is active for same raidId. DoD: refuses edit or forces cancel.
+     - [ ] (Owner=MapEditorUI, Scope=V2.1) Add editor feedback actionbar "Tool: Spawn / Evac / Loot". DoD: clear, low spam, usable.
 
-## Phase 4 — Persistence & Loot (Neutral Formats)
-- [x] Implement SQLite-backed `StashRepository` and `StashService` using neutral `ItemData` representation.
-- [x] Implement `LootTableRegistry` and `LootService` with weighted rolls and injectable RNG seed.
+9. V2.2: Instanced Raid Worlds (Fresh Map Per Raid)
+   - [ ] (Owner=WorldManager, Scope=V2.2) Define folder contract: templates in `/raid_templates/<templateName>/`, instances in `/raid_instances/<raidId>/<instanceId>/`. DoD: documented in README/docs.
+   - [ ] (Owner=WorldManager, Scope=V2.2) `loadRaidWorld(templateName)` clones template to new instance folder. DoD: clone completes reliably; instance world loads; returns world name/id.
+   - [ ] (Owner=WorldManager, Scope=V2.2) `unloadRaidWorld(worldName)` unloads and deletes instance safely. DoD: no world corruption; no file lock crashes.
+   - [ ] (Owner=WorldManager, Scope=V2.2) Deletion fallback strategy (Windows-safe): retry delete; if locked, quarantine folder `_old_<timestamp>` and delete next startup. DoD: server does not hang; disk does not fill silently.
+   - [ ] (Owner=TeleportService, Scope=V2.2) Update `TeleportService` to use instance world. DoD: players spawn into correct instance and evac zones match instance.
+   - [ ] (Owner=RegionProvider, Scope=V2.2) Update `RegionProvider` to resolve regions per instance world. DoD: evac detection works on cloned worlds.
+   - [ ] (Owner=WorldManager, Scope=V2.2) On plugin enable: scan and clean abandoned instance folders (safe delete/quarantine). DoD: prevents buildup across crashes/restarts.
 
-## Phase 5 — Extraction Logic
-- [x] Add `ExtractionService` and `EvacTracker` for countdown handling and idempotent completion.
+10. V2.3: Lobby Trader + Progression Loop (Optional)
+   - [ ] (Owner=Trader, Scope=V2.3) Add `credits` to player profile (SQLite). DoD: persisted reliably; safe from dupes.
+   - [ ] (Owner=LootConfig, Scope=V2.3) Add item values and categories in loot config. DoD: junk items sell for credits; rare items sell for more.
+   - [ ] (Owner=Trader, Scope=V2.3) Implement `TraderNPC` interaction (sell junk for credits, buy starter kit). DoD: basic buy/sell loop works; no dupe exploits.
+   - [ ] (Owner=Trader, Scope=V2.3) Config-driven kit definition in YAML. DoD: easy balancing without code changes.
 
-## Phase 6 — Commands & Listeners (Stubs)
-- [x] Provide skeleton commands (`RaidCommand`, `StashCommand`, admin) and listener stubs that delegate to managers.
+11. Backlog / Nice-to-Have (Post v2)
+   - [ ] (Owner=UI, Scope=Backlog) Bossbar styling + icons (vanilla only). DoD: styling configurable without client mods.
+   - [ ] (Owner=LootConfig, Scope=Backlog) Keycards and locked rooms (config-driven). DoD: keycard gating works without dupes.
+   - [ ] (Owner=AI, Scope=Backlog) POI guards / dynamic mobs. DoD: basic patrols and spawns run safely.
+   - [ ] (Owner=UX, Scope=Backlog) Resource pack for custom models/sounds (optional). DoD: optional pack does not break default clients.
+   - [ ] (Owner=Queue, Scope=Backlog) Squads + party queue. DoD: party join and queueing works with existing raid flow.
+   - [ ] (Owner=Telemetry, Scope=Backlog) Metrics/telemetry dashboard. DoD: core raid metrics exported and visible.
 
-## Phase 7 — Documentation & Integration Checklist
-- [x] Expand README with local Paper testing steps, integration hooks (teleport, inventory snapshot, region checks, GUI stash, chest filling), and cloud/local notes.
-- [x] Keep TODOs tagged (`TODO(V1)`, `TODO(INTEGRATION)`, `TODO(V2)`) and update this roadmap as features land.
+## Invariants / Safety Rules
+- Do not call Bukkit APIs off the main thread.
+- Loot commit to stash happens only on successful extraction.
+- Extraction is idempotent; no double rewards.
+- Failure (death/quit/timeout) restores pre-raid inventory snapshot.
+- Do not commit local server files: `/server/`, world folders, logs, DBs.
 
-## Phase 8 — Build/Release Automation
-- [ ] `TODO(V1)` Add GitHub Actions CI to run `./gradlew clean build` on push/PR with Gradle caching.
-- [ ] `TODO(V1)` Add a Gradle release task that outputs to `build/libs/` with a predictable name (append version if helpful).
-- [ ] `TODO(V1)` Add a release checklist in `docs/releasing.md` (bump version → build → smoke test → tag).
-
-## Integration Adapters & Local Harness
-- [ ] `TODO(INTEGRATION)` Add adapter interfaces (`InventorySnapshotService`, `RegionProvider`, `TeleportService`) so Paper wiring is isolated.
-- [ ] `TODO(INTEGRATION)` Add a `/server/` gitignored local harness and a Gradle copy task for a one-command loop.
-
-## Local Development Checklist (Paper Integration)
-Use this checklist once a local Paper server is available. The cloud phase is complete; remaining work depends on Bukkit/Paper APIs.
-
-### Server Setup
-- [ ] Install Paper 1.21.x and Java 21 locally.
-- [ ] Ensure the Gradle wrapper JAR is present (run `./scripts/fetch-gradle-wrapper.sh` or supply the wrapper JAR manually).
-- [ ] Build and drop the plugin JAR into `plugins/`.
-- [ ] Start the server once to generate `plugins/RaidExtraction/` configs.
-
-### Raid Loop Wiring (queue → raid → loot → extract → stash)
-- [ ] `TODO(INTEGRATION)` Hook `/raid join` to trigger queue updates and auto-start raids when min players queued.
-- [ ] `TODO(INTEGRATION)` Add raid deployment: teleport players to raid spawns and transition `RaidInstance` to `IN_RAID`.
-- [ ] `TODO(INTEGRATION)` Record inventory snapshots and clear inventories on raid start (stash commit only on extraction).
-- [ ] `TODO(INTEGRATION)` Spawn loot via `LootService` (chests or drops) per raid region.
-- [ ] `TODO(INTEGRATION)` Evac zone detection (movement/region checks) to start/cancel evac countdowns.
-- [ ] `TODO(INTEGRATION)` On successful extraction, persist loot to stash and return players to lobby.
-- [ ] `TODO(INTEGRATION)` On failure (death/timeout/quit), restore inventory and clear raid state.
-
-### Commands & Admin Tools
-- [ ] `TODO(V1)` Extend `/raid status` with ETA, raid state, and player count.
-- [ ] `TODO(V1)` Implement `/raidadmin force-extract` (lookup player, mark extraction, stash commit).
-- [ ] `TODO(V1)` Add `/raidadmin cancel` to stop raids and restore players.
-
-### Stash UI & Persistence
-- [ ] `TODO(V1)` Build stash GUI for browsing/withdrawing items.
-- [ ] `TODO(V1)` Convert between `ItemData` and `ItemStack` for stash IO.
-- [ ] `TODO(INTEGRATION)` Run stash persistence writes off-thread, then sync results back to the main thread.
-
-### Resilience & Telemetry
-- [ ] `TODO(V1)` Rehydrate active raids and evac countdowns on server restart.
-- [ ] `TODO(V1)` Add structured logging for raid lifecycle transitions and errors.
-- [ ] `TODO(V2)` Add metrics or bossbar timers for countdown visibility.
-
-### QA Checklist
-- [ ] Verify min/max player enforcement with queues across multiple raid definitions.
-- [ ] Test extraction spam protection and idempotent completion.
-- [ ] Validate stash persistence across restarts and crashes.
-- [ ] Verify loot roll distribution and weighted tables over large samples.
+## Logging Requirements
+- Keep log lines structured for: raid start/end, extraction start/cancel/success, stash commit success/failure, world clone/load/unload/delete.

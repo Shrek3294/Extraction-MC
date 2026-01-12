@@ -3,6 +3,7 @@ package com.raidextraction.raid;
 import com.raidextraction.config.model.RaidDefinition;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public final class RaidManager {
@@ -79,5 +81,32 @@ public final class RaidManager {
 
     public Map<String, RaidDefinition> definitions() {
         return definitions;
+    }
+
+    public boolean rehydrateRaid(RaidInstance instance) {
+        Objects.requireNonNull(instance, "instance");
+        if (!definitions.containsKey(instance.definition().id())) {
+            return false;
+        }
+        if (activeRaids.containsKey(instance.id())) {
+            return false;
+        }
+        activeRaids.put(instance.id(), instance);
+        return true;
+    }
+
+    public Optional<RaidInstance> rehydrateRaid(String raidId,
+                                                RaidDefinition definition,
+                                                RaidState state,
+                                                Instant createdAt,
+                                                Instant stateChangedAt,
+                                                Set<UUID> players) {
+        Objects.requireNonNull(raidId, "raidId");
+        Objects.requireNonNull(definition, "definition");
+        Objects.requireNonNull(state, "state");
+        Objects.requireNonNull(createdAt, "createdAt");
+        Objects.requireNonNull(stateChangedAt, "stateChangedAt");
+        RaidInstance instance = new RaidInstance(raidId, definition, clock, createdAt, state, stateChangedAt, players);
+        return rehydrateRaid(instance) ? Optional.of(instance) : Optional.empty();
     }
 }

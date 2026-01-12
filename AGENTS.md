@@ -25,6 +25,7 @@ This repository hosts the Raid Extraction (Paper) plugin. Follow these guardrail
 - Current known issue: `./scripts/fetch-gradle-wrapper.sh` and any Gradle wrapper invocation fail in this environment because the
   Gradle distribution download is blocked by a proxy (HTTP 403). If you have access to the distribution, place the wrapper JAR
   locally or pre-download the distribution ZIP before running tests.
+- Always clarify whether manual Paper server testing is required; when it is, list the exact commands/interactions to run and the expected results (messages, teleports, inventory changes, timers, stash effects).
 
 ## File Conventions
 - Use Java 21+ compatible code that matches the targeted Paper version.
@@ -53,6 +54,50 @@ This repository hosts the Raid Extraction (Paper) plugin. Follow these guardrail
 - Core logic should not depend on Bukkit/Paper types (`Player`, `ItemStack`, `Location`).
 - Use neutral models (`ItemData`, UUIDs, simple structs) in core.
 - Define interfaces in core for Paper-only concerns and implement them in adapter/listener layers.
+
+## Terminology Clarification — `raidId` vs Raid Instances (IMPORTANT)
+
+To avoid confusion during V2 development:
+
+### `raidId` = Persistent Raid / Map Definition
+- `raidId` identifies a **persistent map + ruleset**, not a single match.
+- It represents the **blueprint** that all players use.
+- Admin editing (`/raidadmin edit <raidId>`) always modifies this persistent definition.
+
+A `raidId` owns:
+- Template world (e.g. `factory_template`)
+- Spawn points
+- Evac zones
+- Loot container locations
+- Raid rules (min/max players, timers, etc.)
+
+Edits to a `raidId` are:
+- **Persistent**
+- **Shared across all players**
+- **Applied to all future raid instances**
+
+
+### Raid Instance = Temporary Runtime Match
+- A raid instance is a **single play session** created from a `raidId`.
+- It may run in:
+  - a fixed raid world (V2.0), or
+  - a cloned instance world (V2.2+).
+- Raid instances are **disposable** and must never be edited directly.
+
+A raid instance:
+- References exactly one `raidId`
+- Reads locations/config from that `raidId`
+- Is destroyed or cleaned up after completion
+
+### Editor Rules (Non-Negotiable)
+- The map editor **must never modify live raid instances**.
+- `/raidadmin edit <raidId>` always:
+  - Teleports the admin to the **template world**
+  - Loads persistent data for that `raidId`
+  - Saves changes to config (`locations.yml`, etc.)
+- All players should experience the **same map layout** for a given `raidId`, regardless of how many instances are created.
+
+
 
 ## TODO Discipline
 - Each TODO should include owner component + scope (CLOUD or INTEGRATION) and a definition of done.
