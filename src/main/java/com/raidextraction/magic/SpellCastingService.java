@@ -27,6 +27,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
@@ -37,6 +38,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public final class SpellCastingService implements Listener {
+    private static final int VOID_ORB_PROJECTILE_CUSTOM_MODEL_DATA = 4001;
+
     private final JavaPlugin plugin;
     private final ItemKeys itemKeys;
     private final ItemsConfig itemsConfig;
@@ -143,6 +146,11 @@ public final class SpellCastingService implements Listener {
         if (spellId == null || spellId.isBlank()) {
             return;
         }
+        if ("void_orb".equals(spellId)) {
+            Location at = event.getEntity().getLocation();
+            at.getWorld().spawnParticle(org.bukkit.Particle.PORTAL, at, 55, 0.25, 0.25, 0.25, 0.18);
+            at.getWorld().playSound(at, Sound.BLOCK_PORTAL_TRAVEL, 0.4f, 1.6f);
+        }
         if (!(event.getHitEntity() instanceof LivingEntity hit)) {
             return;
         }
@@ -205,7 +213,10 @@ public final class SpellCastingService implements Listener {
         snowball.getPersistentDataContainer().set(projectileSpellKey, PersistentDataType.STRING, spellId);
         if (displayMaterial != null && displayMaterial != org.bukkit.Material.AIR) {
             try {
-                snowball.setItem(new ItemStack(displayMaterial));
+                ItemStack displayItem = createProjectileDisplayItem(spellId, displayMaterial);
+                if (displayItem != null) {
+                    snowball.setItem(displayItem);
+                }
             } catch (Throwable ignored) {
             }
         }
@@ -217,7 +228,39 @@ public final class SpellCastingService implements Listener {
                     (Math.random() - 0.5) * spread));
         }
         snowball.setVelocity(velocity);
+        if ("void_orb".equals(spellId)) {
+            startVoidOrbParticles(snowball);
+        }
         return true;
+    }
+
+    private void startVoidOrbParticles(Snowball projectile) {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!projectile.isValid() || projectile.isDead() || projectile.getTicksLived() > 100) {
+                    cancel();
+                    return;
+                }
+                Location at = projectile.getLocation();
+                at.getWorld().spawnParticle(org.bukkit.Particle.PORTAL, at, 10, 0.08, 0.08, 0.08, 0.08);
+            }
+        }.runTaskTimer(plugin, 1L, 1L);
+    }
+
+    private ItemStack createProjectileDisplayItem(String spellId, org.bukkit.Material displayMaterial) {
+        if (displayMaterial == null || displayMaterial == org.bukkit.Material.AIR) {
+            return null;
+        }
+        ItemStack stack = new ItemStack(displayMaterial);
+        if ("void_orb".equals(spellId) && displayMaterial == org.bukkit.Material.ENDER_PEARL) {
+            ItemMeta meta = stack.getItemMeta();
+            if (meta != null) {
+                meta.setCustomModelData(VOID_ORB_PROJECTILE_CUSTOM_MODEL_DATA);
+                stack.setItemMeta(meta);
+            }
+        }
+        return stack;
     }
 
     private boolean launchShardBurst(Player player, String spellId) {
