@@ -12,10 +12,15 @@ commands:
     description: View or manage extracted loot stored in your stash.
     permission: raid.user
     usage: "/stash"
+  weapon:
+    description: Weapon utilities (guide, bench) and admin tools.
+    permission: raid.user
+    usage: "/weapon <guide|bench|apply|give|debugspells>"
+    aliases: [rexweapon]
   raidadmin:
     description: Administrative raid controls for testing and moderation.
     permission: raid.admin
-    usage: "/raidadmin <start|stop|cancel|force-extract>"
+    usage: "/raidadmin <start|stop|cancel|force-extract|edit|exit|save|validate|undo|debugbounds|lootchance|lootpreview>"
 permissions:
   raid.user:
     description: Allows participation in raids and stash access.

@@ -18,8 +18,8 @@ class RaidManagerTest {
 
     @Test
     void enforcesMinMaxAcrossMultipleDefinitions() {
-        RaidDefinition alpha = new RaidDefinition("alpha", "world", 2, 4, 300, "loot", List.of());
-        RaidDefinition beta = new RaidDefinition("beta", "world", 1, 2, 300, "loot", List.of());
+        RaidDefinition alpha = new RaidDefinition("alpha", "world", 2, 4, 300, "loot", List.of(), null, null, 30);
+        RaidDefinition beta = new RaidDefinition("beta", "world", 1, 2, 300, "loot", List.of(), null, null, 30);
         QueueManager queueManager = new QueueManager();
         RaidManager raidManager = new RaidManager(
                 Map.of(alpha.id(), alpha, beta.id(), beta),

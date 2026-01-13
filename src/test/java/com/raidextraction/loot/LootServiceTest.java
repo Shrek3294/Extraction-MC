@@ -20,7 +20,8 @@ class LootServiceTest {
         LootEntry rare = new LootEntry("rare", "DIAMOND", 1, 1, 1);
         LootTableDefinition table = new LootTableDefinition("table", List.of(common, rare));
         LootTableRegistry registry = new LootTableRegistry(Map.of(table.id(), table));
-        LootService service = new LootService(registry, new Random(42));
+        LootService service = new LootService(registry, new Random(42),
+                (entry, amount) -> new ItemData(entry.material(), amount));
 
         List<ItemData> rolls = service.roll(table.id(), 10_000);
         long commonCount = rolls.stream().filter(item -> item.material().equals("STONE")).count();

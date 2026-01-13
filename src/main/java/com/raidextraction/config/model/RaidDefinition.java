@@ -9,9 +9,12 @@ public record RaidDefinition(
         int maxPlayers,
         int durationSeconds,
         String lootTableId,
-        List<EvacZoneDefinition> evacZones
-) {
+        List<EvacZoneDefinition> evacZones,
+        RaidBoundsDefinition bounds, // Optional, null if not configured
+        RaidSpawnConfig spawn, // New field,
+        int targetLootCount) {
     public boolean isValid() {
-        return world != null && !world.isEmpty() && minPlayers > 0 && maxPlayers >= minPlayers && durationSeconds > 0 && lootTableId != null && !lootTableId.isEmpty();
+        return world != null && !world.isEmpty() && minPlayers > 0 && maxPlayers >= minPlayers && durationSeconds > 0
+                && lootTableId != null && !lootTableId.isEmpty() && targetLootCount >= 0;
     }
 }

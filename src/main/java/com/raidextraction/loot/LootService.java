@@ -13,10 +13,12 @@ import java.util.Random;
 public final class LootService {
     private final LootTableRegistry registry;
     private final Random random;
+    private final LootItemFactory itemFactory;
 
-    public LootService(LootTableRegistry registry, Random random) {
+    public LootService(LootTableRegistry registry, Random random, LootItemFactory itemFactory) {
         this.registry = Objects.requireNonNull(registry, "registry");
         this.random = Objects.requireNonNull(random, "random");
+        this.itemFactory = Objects.requireNonNull(itemFactory, "itemFactory");
     }
 
     public List<ItemData> roll(String tableId, int rolls) {
@@ -40,7 +42,7 @@ public final class LootService {
         for (int i = 0; i < rolls; i++) {
             LootEntry entry = pickEntry(entries, totalWeight);
             int amount = random.nextInt(entry.maxAmount() - entry.minAmount() + 1) + entry.minAmount();
-            results.add(new ItemData(entry.material(), amount));
+            results.add(itemFactory.create(entry, amount));
         }
         return results;
     }

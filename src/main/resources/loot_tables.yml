@@ -7,9 +7,54 @@ loot_tables:
         weight: 10
         min_amount: 1
         max_amount: 3
+      - id: iron_dagger
+        material: IRON_SWORD
+        weight: 8
+        min_amount: 1
+        max_amount: 1
+      - id: soldiers_longsword
+        material: IRON_SWORD
+        weight: 7
+        min_amount: 1
+        max_amount: 1
+      - id: bone_cleaver
+        material: IRON_AXE
+        weight: 6
+        min_amount: 1
+        max_amount: 1
       - id: rusty_sword
         material: IRON_SWORD
         weight: 5
+        min_amount: 1
+        max_amount: 1
+      - id: venom_vial
+        material: HONEY_BOTTLE
+        weight: 8
+        min_amount: 1
+        max_amount: 1
+      - id: wind_rune
+        material: FEATHER
+        weight: 8
+        min_amount: 1
+        max_amount: 1
+      - id: splinter_core
+        material: BONE
+        weight: 8
+        min_amount: 1
+        max_amount: 1
+      - id: scroll_backstab
+        material: PAPER
+        weight: 2
+        min_amount: 1
+        max_amount: 1
+      - id: scroll_bleed
+        material: PAPER
+        weight: 2
+        min_amount: 1
+        max_amount: 1
+      - id: scroll_momentum
+        material: PAPER
+        weight: 2
         min_amount: 1
         max_amount: 1
       - id: canned_food
@@ -17,3 +62,145 @@ loot_tables:
         weight: 12
         min_amount: 2
         max_amount: 4
+  weapon_pool:
+    entries:
+      - id: iron_dagger
+        material: IRON_SWORD
+        weight: 10
+        min_amount: 1
+        max_amount: 1
+      - id: soldiers_longsword
+        material: IRON_SWORD
+        weight: 10
+        min_amount: 1
+        max_amount: 1
+      - id: bone_cleaver
+        material: IRON_AXE
+        weight: 9
+        min_amount: 1
+        max_amount: 1
+      - id: frostbite_blade
+        material: IRON_SWORD
+        weight: 5
+        min_amount: 1
+        max_amount: 1
+      - id: infernal_saber
+        material: IRON_SWORD
+        weight: 5
+        min_amount: 1
+        max_amount: 1
+      - id: stormpiercer_rapier
+        material: IRON_SWORD
+        weight: 5
+        min_amount: 1
+        max_amount: 1
+      - id: voidreaver
+        material: IRON_SWORD
+        weight: 4
+        min_amount: 1
+        max_amount: 1
+      - id: dragonfang_greatsword
+        material: NETHERITE_SWORD
+        weight: 2
+        min_amount: 1
+        max_amount: 1
+      - id: celestial_glaive
+        material: NETHERITE_SWORD
+        weight: 2
+        min_amount: 1
+        max_amount: 1
+      - id: chronos_blade
+        material: NETHERITE_SWORD
+        weight: 1
+        min_amount: 1
+        max_amount: 1
+      - id: oblivion_scythe
+        material: NETHERITE_SWORD
+        weight: 1
+        min_amount: 1
+        max_amount: 1
+      - id: aetherblade
+        material: NETHERITE_SWORD
+        weight: 1
+        min_amount: 1
+        max_amount: 1
+      - id: venom_vial
+        material: HONEY_BOTTLE
+        weight: 8
+        min_amount: 1
+        max_amount: 1
+      - id: wind_rune
+        material: FEATHER
+        weight: 8
+        min_amount: 1
+        max_amount: 1
+      - id: splinter_core
+        material: BONE
+        weight: 8
+        min_amount: 1
+        max_amount: 1
+      - id: cryo_core
+        material: PRISMARINE_CRYSTALS
+        weight: 4
+        min_amount: 1
+        max_amount: 1
+      - id: blast_rune
+        material: GUNPOWDER
+        weight: 4
+        min_amount: 1
+        max_amount: 1
+      - id: voltage_cell
+        material: REDSTONE
+        weight: 4
+        min_amount: 1
+        max_amount: 1
+      - id: dark_core
+        material: ENDER_PEARL
+        weight: 3
+        min_amount: 1
+        max_amount: 1
+      - id: inferno_catalyst
+        material: BLAZE_POWDER
+        weight: 2
+        min_amount: 1
+        max_amount: 1
+      - id: astral_lens
+        material: QUARTZ
+        weight: 2
+        min_amount: 1
+        max_amount: 1
+      - id: temporal_core
+        material: CLOCK
+        weight: 1
+        min_amount: 1
+        max_amount: 1
+      - id: death_core
+        material: WITHER_SKELETON_SKULL
+        weight: 1
+        min_amount: 1
+        max_amount: 1
+      - id: prismatic_core
+        material: PRISMARINE_SHARD
+        weight: 1
+        min_amount: 1
+        max_amount: 1
+      - id: scroll_backstab
+        material: PAPER
+        weight: 2
+        min_amount: 1
+        max_amount: 1
+      - id: scroll_bleed
+        material: PAPER
+        weight: 2
+        min_amount: 1
+        max_amount: 1
+      - id: scroll_momentum
+        material: PAPER
+        weight: 2
+        min_amount: 1
+        max_amount: 1
+      - id: scroll_grim_harvest
+        material: PAPER
+        weight: 1
+        min_amount: 1
+        max_amount: 1

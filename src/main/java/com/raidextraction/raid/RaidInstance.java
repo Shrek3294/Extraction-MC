@@ -9,6 +9,11 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
+import com.raidextraction.stash.ItemData;
 
 public final class RaidInstance {
     private final String id;
@@ -31,12 +36,12 @@ public final class RaidInstance {
     }
 
     public RaidInstance(String id,
-                        RaidDefinition definition,
-                        Clock clock,
-                        Instant createdAt,
-                        RaidState state,
-                        Instant stateChangedAt,
-                        Set<UUID> players) {
+            RaidDefinition definition,
+            Clock clock,
+            Instant createdAt,
+            RaidState state,
+            Instant stateChangedAt,
+            Set<UUID> players) {
         this.id = Objects.requireNonNull(id, "id");
         this.definition = Objects.requireNonNull(definition, "definition");
         this.clock = Objects.requireNonNull(clock, "clock");
@@ -112,6 +117,35 @@ public final class RaidInstance {
             return null;
         }
         return stateChangedAt.plusSeconds(definition.durationSeconds());
+    }
+
+    private final Map<String, List<ItemData>> pendingLoot = new HashMap<>();
+
+    public void addPendingLoot(int x, int y, int z, List<ItemData> loot) {
+        String key = formatLocationKey(x, y, z);
+        pendingLoot.put(key, new ArrayList<>(loot));
+    }
+
+    public List<ItemData> getPendingLoot(int x, int y, int z) {
+        String key = formatLocationKey(x, y, z);
+        return pendingLoot.getOrDefault(key, Collections.emptyList());
+    }
+
+    public List<ItemData> takePendingLoot(int x, int y, int z) {
+        String key = formatLocationKey(x, y, z);
+        return pendingLoot.remove(key);
+    }
+
+    public boolean hasPendingLoot(int x, int y, int z) {
+        return pendingLoot.containsKey(formatLocationKey(x, y, z));
+    }
+
+    public int getPendingLootMapSize() {
+        return pendingLoot.size();
+    }
+
+    private String formatLocationKey(int x, int y, int z) {
+        return x + "," + y + "," + z;
     }
 
     public void transitionTo(RaidState nextState) {

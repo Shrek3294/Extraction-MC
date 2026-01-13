@@ -38,9 +38,12 @@ A data-driven Paper plugin that delivers an extraction-style raid loop for Minec
 - **Reset/Cleanup:** restore players to lobby, cancel tasks, reset containers, and clear entities/effects.
 
 ## Commands
-- `/raid join|leave|status <raidId>` — status shows raid state, player counts, and remaining time for active raids.
-- `/raidadmin start <raidId>`, `stop|cancel <activeRaidId>`, `force-extract <playerName|playerUuid>` — admin controls for testing and moderation.
-- `/stash` — opens a stash GUI for browsing and withdrawing extracted loot (persistence runs off-thread, results synced on the main thread).
+- `/raid join|leave|status <raidId>` ?? status shows raid state, player counts, and remaining time for active raids.
+- `/raidadmin start <raidId>`, `stop|cancel <activeRaidId>`, `force-extract <playerName|playerUuid>` ?? admin controls for testing and moderation.
+- `/raidadmin edit <raidId>`, `exit`, `save`, `validate`, `undo` ?? editor flow for spawns, evac zones, and loot markers.
+- `/raidadmin lootchance <percent>` ?? set default chance for new loot markers (and update the targeted container).
+- `/raidadmin lootpreview` ?? toggle preview items in all loot containers while editing.
+- `/stash` ?? opens a stash GUI for browsing and withdrawing extracted loot (persistence runs off-thread, results synced on the main thread).
 
 ## Repository Status
 Core raid loop services (queue → raid → loot → extract → stash), stash persistence, extraction countdowns, and command/listener stubs are in place for the cloud-safe build phase. See `TODO.md` for the implementation roadmap and the local development checklist that resumes once a Paper server is available.
@@ -51,6 +54,7 @@ Core raid loop services (queue → raid → loot → extract → stash), stash p
 - Gradle wrapper binary is **not** committed to keep binaries out of the repo. Run `./scripts/fetch-gradle-wrapper.sh` (Git Bash
   on Windows) or drop `gradle/wrapper/gradle-wrapper.jar` locally before running any Gradle tasks. Do not commit the wrapper JAR.
 - After bootstrapping the wrapper, run `./gradlew clean build` to compile and execute unit tests (`.\gradlew.bat` on Windows).
+- Release checklist and version bump steps live in `docs/releasing.md`.
 
 ## Recommended Versions
 - **Paper:** latest stable 1.21.x (or 1.20.1 for ecosystem stability).
@@ -118,7 +122,7 @@ raidextraction/
 ```
 
 ## Config Files
-- **config.yml:** global settings (debug flags, lobby spawn, evac countdown duration).
+- **config.yml:** global settings (debug flags, `lobbyWorld`/`lobbySpawn`, `raidWorld`, evac countdown duration).
 - **raids.yml:** raid definitions (world, lobby spawn, raid region, player spawns, evac zones, duration).
 - **loot_tables.yml:** named loot tables with weighted entries (material, amount range, enchantments later).
 - **director.yml:** placeholder for threat curves/events (future).

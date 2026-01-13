@@ -21,7 +21,8 @@ public final class RaidManager {
     private final Clock clock;
 
     public RaidManager(Map<String, RaidDefinition> definitions, QueueManager queueManager, Clock clock) {
-        this.definitions = Collections.unmodifiableMap(new HashMap<>(Objects.requireNonNull(definitions, "definitions")));
+        this.definitions = Collections
+                .unmodifiableMap(new HashMap<>(Objects.requireNonNull(definitions, "definitions")));
         this.queueManager = Objects.requireNonNull(queueManager, "queueManager");
         this.clock = Objects.requireNonNull(clock, "clock");
     }
@@ -74,6 +75,16 @@ public final class RaidManager {
         return List.copyOf(activeRaids.values());
     }
 
+    public boolean hasActiveRaidForDefinition(String raidDefinitionId) {
+        Objects.requireNonNull(raidDefinitionId, "raidDefinitionId");
+        for (RaidInstance raid : activeRaids.values()) {
+            if (raid.definition().id().equals(raidDefinitionId) && raid.state() != RaidState.ENDED) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean endRaid(String raidId) {
         Objects.requireNonNull(raidId, "raidId");
         return activeRaids.remove(raidId) != null;
@@ -96,11 +107,11 @@ public final class RaidManager {
     }
 
     public Optional<RaidInstance> rehydrateRaid(String raidId,
-                                                RaidDefinition definition,
-                                                RaidState state,
-                                                Instant createdAt,
-                                                Instant stateChangedAt,
-                                                Set<UUID> players) {
+            RaidDefinition definition,
+            RaidState state,
+            Instant createdAt,
+            Instant stateChangedAt,
+            Set<UUID> players) {
         Objects.requireNonNull(raidId, "raidId");
         Objects.requireNonNull(definition, "definition");
         Objects.requireNonNull(state, "state");
@@ -108,5 +119,12 @@ public final class RaidManager {
         Objects.requireNonNull(stateChangedAt, "stateChangedAt");
         RaidInstance instance = new RaidInstance(raidId, definition, clock, createdAt, state, stateChangedAt, players);
         return rehydrateRaid(instance) ? Optional.of(instance) : Optional.empty();
+    }
+
+    public Optional<RaidInstance> getRaidForPlayer(UUID playerId) {
+        Objects.requireNonNull(playerId, "playerId");
+        return activeRaids.values().stream()
+                .filter(raid -> raid.players().contains(playerId))
+                .findFirst();
     }
 }

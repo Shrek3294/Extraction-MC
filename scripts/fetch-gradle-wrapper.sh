@@ -35,9 +35,14 @@ ARCHIVE="$WORKDIR/gradle-dist.zip"
 echo "Downloading Gradle distribution from $DISTRIBUTION_URL ..."
 curl -sSL "$DISTRIBUTION_URL" -o "$ARCHIVE"
 
-# Extract only the wrapper jar from the distribution
-ZIP_PATH="gradle-*/lib/gradle-wrapper-*.jar"
-echo "Extracting wrapper jar..."
-unzip -p "$ARCHIVE" $ZIP_PATH > "$TARGET_JAR"
+# Extract only the wrapper jar from the distribution (exclude gradle-wrapper-shared).
+ZIP_PATH=$(unzip -Z1 "$ARCHIVE" | grep -E 'gradle-wrapper-[^/]*\.jar$' | grep -v 'gradle-wrapper-shared' | head -n 1)
+if [[ -z "$ZIP_PATH" ]]; then
+  echo "Gradle wrapper jar not found in distribution archive" >&2
+  exit 1
+fi
+
+echo "Extracting wrapper jar from $ZIP_PATH..."
+unzip -p "$ARCHIVE" "$ZIP_PATH" > "$TARGET_JAR"
 chmod +x "$TARGET_JAR"
 echo "Wrapper jar written to $TARGET_JAR"

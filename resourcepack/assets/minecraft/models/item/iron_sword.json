@@ -1,0 +1,15 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "minecraft:item/iron_sword"
+  },
+  "overrides": [
+    { "predicate": { "custom_model_data": 1001 }, "model": "minecraft:item/iron_dagger" },
+    { "predicate": { "custom_model_data": 1002 }, "model": "minecraft:item/iron_broadsword" },
+    { "predicate": { "custom_model_data": 1004 }, "model": "minecraft:item/crystal_frostblade" },
+    { "predicate": { "custom_model_data": 1005 }, "model": "minecraft:item/dragon_sword" },
+    { "predicate": { "custom_model_data": 1006 }, "model": "minecraft:item/piercer" },
+    { "predicate": { "custom_model_data": 1007 }, "model": "minecraft:item/nocturne" }
+  ]
+}
+

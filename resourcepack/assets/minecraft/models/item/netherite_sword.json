@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "minecraft:item/netherite_sword"
+  },
+  "overrides": [
+    { "predicate": { "custom_model_data": 1008 }, "model": "minecraft:item/phantomguard_greatsword" },
+    { "predicate": { "custom_model_data": 1009 }, "model": "minecraft:item/heavenly_partisan" },
+    { "predicate": { "custom_model_data": 1010 }, "model": "minecraft:item/solstice" },
+    { "predicate": { "custom_model_data": 1011 }, "model": "minecraft:item/revenants_gravescepter" },
+    { "predicate": { "custom_model_data": 1012 }, "model": "minecraft:item/zenith" }
+  ]
+}
+

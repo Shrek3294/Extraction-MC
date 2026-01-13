@@ -1,6 +1,7 @@
 package com.raidextraction.integration.paper;
 
 import com.raidextraction.config.model.EvacZoneDefinition;
+import com.raidextraction.config.model.RaidBoundsDefinition;
 import com.raidextraction.config.model.RaidDefinition;
 import com.raidextraction.integration.RegionProvider;
 import org.bukkit.Location;
@@ -49,5 +50,22 @@ public final class PaperRegionProvider implements RegionProvider {
         }
         int surfaceY = player.getWorld().getHighestBlockYAt(location.getBlockX(), location.getBlockZ());
         return location.getY() >= surfaceY - 1;
+    }
+
+    @Override
+    public boolean isInRaidBounds(UUID playerId, RaidBoundsDefinition raidBoundsDefinition) {
+        if (raidBoundsDefinition == null) {
+            return true; // No bounds configured, always in bounds
+        }
+        Objects.requireNonNull(playerId, "playerId");
+        Player player = plugin.getServer().getPlayer(playerId);
+        if (player == null || !player.isOnline()) {
+            return false;
+        }
+        if (!player.getWorld().getName().equalsIgnoreCase(raidBoundsDefinition.world())) {
+            return false;
+        }
+        Location location = player.getLocation();
+        return raidBoundsDefinition.contains(location.getX(), location.getY(), location.getZ());
     }
 }

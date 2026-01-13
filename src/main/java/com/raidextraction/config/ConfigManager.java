@@ -1,9 +1,12 @@
 package com.raidextraction.config;
 
 import com.raidextraction.config.model.EvacZoneDefinition;
+import com.raidextraction.config.model.LobbySpawnConfig;
 import com.raidextraction.config.model.LootEntry;
 import com.raidextraction.config.model.LootTableDefinition;
+import com.raidextraction.config.model.RaidBoundsDefinition;
 import com.raidextraction.config.model.RaidDefinition;
+import com.raidextraction.config.model.RaidSpawnConfig;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -25,9 +28,11 @@ public final class ConfigManager {
     private FileConfiguration raidsConfig;
     private FileConfiguration lootTablesConfig;
     private FileConfiguration directorConfig;
+    private FileConfiguration itemsConfig;
 
     private Map<String, RaidDefinition> raidDefinitions = Collections.emptyMap();
     private Map<String, LootTableDefinition> lootTableDefinitions = Collections.emptyMap();
+    private com.raidextraction.item.ItemsConfig itemsDefinition = com.raidextraction.item.ItemsConfig.empty();
 
     public ConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -39,18 +44,69 @@ public final class ConfigManager {
         ensureResource("raids.yml");
         ensureResource("loot_tables.yml");
         ensureResource("director.yml");
+        ensureResource("items.yml");
 
         mainConfig = loadConfig("config.yml");
         raidsConfig = loadConfig("raids.yml");
         lootTablesConfig = loadConfig("loot_tables.yml");
         directorConfig = loadConfig("director.yml");
+        itemsConfig = loadConfig("items.yml");
 
         lootTableDefinitions = parseLootTables();
         raidDefinitions = parseRaids();
+        itemsDefinition = com.raidextraction.item.ItemsConfig.parse(itemsConfig, logger);
     }
 
     public FileConfiguration getMainConfig() {
         return mainConfig;
+    }
+
+    public String getLobbyWorld() {
+        String value = mainConfig.getString("lobbyWorld");
+        if (value != null && !value.isBlank()) {
+            return value;
+        }
+        String legacyValue = mainConfig.getString("lobby_world");
+        if (legacyValue != null && !legacyValue.isBlank()) {
+            return legacyValue;
+        }
+        return "world";
+    }
+
+    public LobbySpawnConfig getLobbySpawnConfig() {
+        String world = getLobbyWorld();
+        ConfigurationSection lobbySpawn = mainConfig.getConfigurationSection("lobbySpawn");
+        if (lobbySpawn == null) {
+            // Only warn once or if specifically debugging, to avoid log spam if defaults
+            // are intentional
+            // logger.warning("Missing lobbySpawn config; using defaults.");
+            return new LobbySpawnConfig(world, 0, 64, 0, 0, 0);
+        }
+        return new LobbySpawnConfig(
+                world,
+                lobbySpawn.getDouble("x", 0),
+                lobbySpawn.getDouble("y", 64),
+                lobbySpawn.getDouble("z", 0),
+                (float) lobbySpawn.getDouble("yaw", 0),
+                (float) lobbySpawn.getDouble("pitch", 0));
+    }
+
+    public void setLobbySpawn(org.bukkit.Location location) {
+        if (location == null || location.getWorld() == null) {
+            return;
+        }
+        mainConfig.set("lobbyWorld", location.getWorld().getName());
+        ConfigurationSection section = mainConfig.createSection("lobbySpawn");
+        section.set("x", location.getX());
+        section.set("y", location.getY());
+        section.set("z", location.getZ());
+        section.set("yaw", location.getYaw());
+        section.set("pitch", location.getPitch());
+        try {
+            mainConfig.save(new File(plugin.getDataFolder(), "config.yml"));
+        } catch (Exception e) {
+            logger.log(java.util.logging.Level.SEVERE, "Failed to save lobby spawn to config.yml", e);
+        }
     }
 
     public FileConfiguration getDirectorConfig() {
@@ -63,6 +119,10 @@ public final class ConfigManager {
 
     public Map<String, LootTableDefinition> getLootTableDefinitions() {
         return lootTableDefinitions;
+    }
+
+    public com.raidextraction.item.ItemsConfig getItemsDefinition() {
+        return itemsDefinition;
     }
 
     private void ensureResource(String resourceName) {
@@ -100,8 +160,7 @@ public final class ConfigManager {
                         asString(entryMap.get("material"), ""),
                         asInt(entryMap.get("weight"), 1),
                         asInt(entryMap.get("min_amount"), 1),
-                        asInt(entryMap.get("max_amount"), 1)
-                );
+                        asInt(entryMap.get("max_amount"), 1));
                 if (!entry.isValid()) {
                     logger.warning("Invalid loot entry in table " + id + ": " + entry);
                     continue;
@@ -136,6 +195,8 @@ public final class ConfigManager {
             }
 
             List<EvacZoneDefinition> evacZones = parseEvacZones(raidSection);
+            RaidBoundsDefinition bounds = parseRaidBounds(raidSection);
+            RaidSpawnConfig spawn = parseRaidSpawn(raidSection);
             RaidDefinition definition = new RaidDefinition(
                     id,
                     raidSection.getString("world", "world"),
@@ -143,9 +204,10 @@ public final class ConfigManager {
                     raidSection.getInt("max_players", 4),
                     raidSection.getInt("duration_seconds", 900),
                     raidSection.getString("loot_table", "default"),
-                    evacZones
-            );
-
+                    evacZones,
+                    bounds,
+                    spawn,
+                    raidSection.getInt("target_loot_count", 30));
             if (!definition.isValid()) {
                 logger.warning("Raid " + id + " is missing required fields or has invalid limits.");
                 continue;
@@ -172,8 +234,7 @@ public final class ConfigManager {
                     asInt(map.get("x"), 0),
                     asInt(map.get("y"), 64),
                     asInt(map.get("z"), 0),
-                    asInt(map.get("radius"), 6)
-            );
+                    asInt(map.get("radius"), 6));
             if (!zone.isValid()) {
                 logger.warning("Invalid evac zone in raid " + raidSection.getName() + ": " + zone);
                 continue;
@@ -192,5 +253,39 @@ public final class ConfigManager {
 
     private String asString(Object value, String fallback) {
         return value != null ? value.toString() : fallback;
+    }
+
+    private RaidBoundsDefinition parseRaidBounds(ConfigurationSection raidSection) {
+        ConfigurationSection boundsSection = raidSection.getConfigurationSection("bounds");
+        if (boundsSection == null) {
+            return null; // Bounds are optional
+        }
+        String world = raidSection.getString("world", "world");
+        RaidBoundsDefinition bounds = new RaidBoundsDefinition(
+                world,
+                boundsSection.getInt("minX", 0),
+                boundsSection.getInt("minY", 0),
+                boundsSection.getInt("minZ", 0),
+                boundsSection.getInt("maxX", 0),
+                boundsSection.getInt("maxY", 256),
+                boundsSection.getInt("maxZ", 0));
+        if (!bounds.isValid()) {
+            logger.warning("Invalid bounds in raid " + raidSection.getName() + "; bounds will be ignored.");
+            return null;
+        }
+        return bounds;
+    }
+
+    private RaidSpawnConfig parseRaidSpawn(ConfigurationSection raidSection) {
+        ConfigurationSection spawnSection = raidSection.getConfigurationSection("spawn");
+        if (spawnSection == null) {
+            return null; // Spawn is optional
+        }
+        return new RaidSpawnConfig(
+                spawnSection.getDouble("x", 0),
+                spawnSection.getDouble("y", 64),
+                spawnSection.getDouble("z", 0),
+                (float) spawnSection.getDouble("yaw", 0),
+                (float) spawnSection.getDouble("pitch", 0));
     }
 }

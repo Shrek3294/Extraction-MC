@@ -1,7 +1,14 @@
 # Global settings for Raid Extraction. Values here provide defaults for other configs.
-# Later phases will add lobby spawn, queue sizing, and matchmaking tuning.
+# Later phases will add queue sizing and matchmaking tuning.
 
 debug: false
-lobby_world: world
+lobbyWorld: world
+lobbySpawn:
+  x: 0
+  y: 64
+  z: 0
+  yaw: 0
+  pitch: 0
+raidWorld: world
 evac_duration_seconds: 10 # Seconds players must hold in an evac zone before extraction completes.
 announce_start: true

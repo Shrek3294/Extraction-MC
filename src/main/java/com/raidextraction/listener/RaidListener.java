@@ -18,4 +18,15 @@ public final class RaidListener implements Listener {
     public void handlePlayerQuit(PlayerQuitEvent event) {
         raidLifecycleCoordinator.handlePlayerQuit(event.getPlayer().getUniqueId());
     }
+
+    @EventHandler
+    public void handlePlayerMove(org.bukkit.event.player.PlayerMoveEvent event) {
+        // Optimization: Don't process if hasn't moved a block
+        if (event.getFrom().getBlockX() == event.getTo().getBlockX()
+                && event.getFrom().getBlockY() == event.getTo().getBlockY()
+                && event.getFrom().getBlockZ() == event.getTo().getBlockZ()) {
+            return;
+        }
+        raidLifecycleCoordinator.handlePlayerMove(event.getPlayer().getUniqueId());
+    }
 }

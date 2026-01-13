@@ -19,3 +19,17 @@ raids:
         y: 68
         z: 240
         radius: 5
+  future_city:
+    world: future_city
+    min_players: 1
+    max_players: 4
+    duration_seconds: 900
+    loot_table: starter_cache
+    evac_zones: []
+    spawn:
+      x: -174
+      y: 63
+      z: 171
+      yaw: 0
+      pitch: 0
+    target_loot_count: 50

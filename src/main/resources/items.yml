@@ -1,0 +1,314 @@
+# Custom items (weapons + mods) used by loot tables.
+# The `custom_model_data` values must match your resource pack overrides.
+items:
+  weapons:
+    iron_dagger:
+      material: IRON_SWORD
+      rarity: COMMON
+      custom_model_data: 1001
+      name: "<gray>Iron Dagger"
+      weapon_type: DAGGER
+      mod_slots: 2
+      spell:
+        id: poison_needle
+        locked: true
+    soldiers_longsword:
+      material: IRON_SWORD
+      rarity: COMMON
+      custom_model_data: 1002
+      name: "<gray>Soldier's Longsword"
+      weapon_type: SWORD
+      mod_slots: 2
+      spell:
+        id: wind_slash
+        locked: true
+    bone_cleaver:
+      material: IRON_AXE
+      rarity: COMMON
+      custom_model_data: 1003
+      name: "<gray>Bone Cleaver"
+      weapon_type: CLEAVER
+      mod_slots: 2
+      spell:
+        id: bone_shard
+        locked: true
+    frostbite_blade:
+      material: IRON_SWORD
+      rarity: RARE
+      custom_model_data: 1004
+      name: "<blue>Frostbite Blade"
+      weapon_type: SWORD
+      mod_slots: 3
+      spell:
+        id: ice_lance
+        locked: true
+    infernal_saber:
+      material: IRON_SWORD
+      rarity: RARE
+      custom_model_data: 1005
+      name: "<blue>Infernal Saber"
+      weapon_type: SABER
+      mod_slots: 3
+      spell:
+        id: fireball
+        locked: true
+    stormpiercer_rapier:
+      material: IRON_SWORD
+      rarity: RARE
+      custom_model_data: 1006
+      name: "<blue>Stormpiercer Rapier"
+      weapon_type: RAPIER
+      mod_slots: 3
+      spell:
+        id: lightning_bolt
+        locked: true
+    voidreaver:
+      material: IRON_SWORD
+      rarity: RARE
+      custom_model_data: 1007
+      name: "<blue>Voidreaver"
+      weapon_type: SWORD
+      mod_slots: 3
+      spell:
+        id: void_orb
+        locked: true
+    dragonfang_greatsword:
+      material: NETHERITE_SWORD
+      rarity: EPIC
+      custom_model_data: 1008
+      name: "<dark_purple>Dragonfang Greatsword"
+      weapon_type: GREATSWORD
+      mod_slots: 4
+      spell:
+        id: fire_breath_wave
+        locked: true
+    celestial_glaive:
+      material: NETHERITE_SWORD
+      rarity: EPIC
+      custom_model_data: 1009
+      name: "<dark_purple>Celestial Glaive"
+      weapon_type: GLAIVE
+      mod_slots: 4
+      spell:
+        id: light_spear
+        locked: true
+    chronos_blade:
+      material: NETHERITE_SWORD
+      rarity: LEGENDARY
+      custom_model_data: 1010
+      name: "<gold>Chronos Blade"
+      weapon_type: SWORD
+      mod_slots: 4
+      spell:
+        id: time_rift
+        locked: true
+    oblivion_scythe:
+      material: NETHERITE_SWORD
+      rarity: LEGENDARY
+      custom_model_data: 1011
+      name: "<gold>Oblivion Scythe"
+      weapon_type: SCYTHE
+      mod_slots: 4
+      spell:
+        id: soul_wave
+        locked: true
+    aetherblade:
+      material: NETHERITE_SWORD
+      rarity: EXOTIC
+      custom_model_data: 1012
+      name: "<red>Aetherblade"
+      weapon_type: SWORD
+      mod_slots: 5
+      spell:
+        id: elemental_barrage
+        locked: true
+
+  mods:
+    serrated_edge:
+      material: AMETHYST_SHARD
+      rarity: COMMON
+      custom_model_data: 2001
+      name: "<gray>Serrated Edge"
+      category: EDGE
+    lightweight_grip:
+      material: LEATHER
+      rarity: COMMON
+      custom_model_data: 2002
+      name: "<gray>Lightweight Grip"
+      category: GRIP
+    venom_vial:
+      material: HONEY_BOTTLE
+      rarity: COMMON
+      custom_model_data: 2003
+      name: "<gray>Venom Vial"
+      category: CORE
+      unlock_spell: poison_needle
+    wind_rune:
+      material: FEATHER
+      rarity: COMMON
+      custom_model_data: 2004
+      name: "<gray>Wind Rune"
+      category: CORE
+      unlock_spell: wind_slash
+    splinter_core:
+      material: BONE
+      rarity: COMMON
+      custom_model_data: 2005
+      name: "<gray>Splinter Core"
+      category: CORE
+      unlock_spell: bone_shard
+    cryo_core:
+      material: PRISMARINE_CRYSTALS
+      rarity: RARE
+      custom_model_data: 2006
+      name: "<blue>Cryo Core"
+      category: CORE
+      unlock_spell: ice_lance
+    blast_rune:
+      material: GUNPOWDER
+      rarity: RARE
+      custom_model_data: 2007
+      name: "<blue>Blast Rune"
+      category: CORE
+      unlock_spell: fireball
+    voltage_cell:
+      material: REDSTONE
+      rarity: RARE
+      custom_model_data: 2008
+      name: "<blue>Voltage Cell"
+      category: CORE
+      unlock_spell: lightning_bolt
+    dark_core:
+      material: ENDER_PEARL
+      rarity: RARE
+      custom_model_data: 2009
+      name: "<blue>Dark Core"
+      category: CORE
+      unlock_spell: void_orb
+    inferno_catalyst:
+      material: BLAZE_POWDER
+      rarity: EPIC
+      custom_model_data: 2010
+      name: "<dark_purple>Inferno Catalyst"
+      category: CORE
+      unlock_spell: fire_breath_wave
+    astral_lens:
+      material: QUARTZ
+      rarity: EPIC
+      custom_model_data: 2011
+      name: "<dark_purple>Astral Lens"
+      category: CORE
+      unlock_spell: light_spear
+    temporal_core:
+      material: CLOCK
+      rarity: LEGENDARY
+      custom_model_data: 2012
+      name: "<gold>Temporal Core"
+      category: CORE
+      unlock_spell: time_rift
+    death_core:
+      material: WITHER_SKELETON_SKULL
+      rarity: LEGENDARY
+      custom_model_data: 2013
+      name: "<gold>Death Core"
+      category: CORE
+      unlock_spell: soul_wave
+    prismatic_core:
+      material: PRISMARINE_SHARD
+      rarity: EXOTIC
+      custom_model_data: 2014
+      name: "<red>Prismatic Core"
+      category: CORE
+      unlock_spell: elemental_barrage
+    scroll_backstab:
+      material: PAPER
+      rarity: UNCOMMON
+      custom_model_data: 3001
+      name: "<green>Enchant Scroll: Backstab"
+      category: ENCHANT
+      enchant_id: backstab
+      enchant_level: 1
+    scroll_bleed:
+      material: PAPER
+      rarity: UNCOMMON
+      custom_model_data: 3002
+      name: "<green>Enchant Scroll: Bleed"
+      category: ENCHANT
+      enchant_id: bleed
+      enchant_level: 1
+    scroll_momentum:
+      material: PAPER
+      rarity: UNCOMMON
+      custom_model_data: 3003
+      name: "<green>Enchant Scroll: Momentum"
+      category: ENCHANT
+      enchant_id: momentum
+      enchant_level: 1
+    scroll_grim_harvest:
+      material: PAPER
+      rarity: RARE
+      custom_model_data: 3004
+      name: "<blue>Enchant Scroll: Grim Harvest"
+      category: ENCHANT
+      enchant_id: grim_harvest
+      enchant_level: 1
+
+enchants:
+  backstab:
+    name: "<gray>Backstab"
+    max_level: 3
+    allowed_weapon_types: [DAGGER, RAPIER]
+  bleed:
+    name: "<gray>Bleed"
+    max_level: 1
+    allowed_weapon_types: [DAGGER, CLEAVER, GREATSWORD, SCYTHE]
+  momentum:
+    name: "<gray>Momentum"
+    max_level: 1
+    allowed_weapon_types: [SWORD, SABER]
+  grim_harvest:
+    name: "<gray>Grim Harvest"
+    max_level: 2
+    allowed_weapon_types: [CLEAVER, SCYTHE]
+
+spells:
+  poison_needle:
+    cooldown_ms: 1500
+    mana_cost: 10
+  wind_slash:
+    cooldown_ms: 1500
+    mana_cost: 10
+  bone_shard:
+    cooldown_ms: 2200
+    mana_cost: 14
+  ice_lance:
+    cooldown_ms: 2000
+    mana_cost: 14
+  fireball:
+    cooldown_ms: 2500
+    mana_cost: 18
+  lightning_bolt:
+    cooldown_ms: 2800
+    mana_cost: 20
+  void_orb:
+    cooldown_ms: 3000
+    mana_cost: 18
+  fire_breath_wave:
+    cooldown_ms: 3500
+    mana_cost: 22
+  light_spear:
+    cooldown_ms: 3000
+    mana_cost: 20
+  time_rift:
+    cooldown_ms: 4000
+    mana_cost: 24
+  soul_wave:
+    cooldown_ms: 3200
+    mana_cost: 20
+  elemental_barrage:
+    cooldown_ms: 4500
+    mana_cost: 28
+
+mana:
+  max: 100
+  regen_per_second: 6

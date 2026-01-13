@@ -1,0 +1,11 @@
+v1.17
+- added Ravenous Blade
+- modified hotbar display of iron hay sickle
+- reformatted weapon file names
+- added version name in pack description
+- improved 1st person positioning of the following weapons:
+-- calamity blade
+-- nocturne
+-- phantomguard greatsword
+-- heavenly partisan
+-- grand claymore

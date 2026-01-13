@@ -1,6 +1,8 @@
 package com.raidextraction.extraction;
 
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,10 +14,23 @@ import java.util.UUID;
 
 public final class ExtractionService {
     private final EvacTracker evacTracker;
+    private final Clock clock;
     private final Map<String, Set<UUID>> extractedPlayers = new HashMap<>();
+    private final Map<String, Set<UUID>> extractionHandled = new HashMap<>();
+    private final Map<UUID, Instant> extractionAttemptCooldowns = new HashMap<>();
+    private final Map<UUID, Instant> commandCooldowns = new HashMap<>();
+    private final Duration extractionAttemptCooldown;
+    private final Duration commandCooldown;
 
     public ExtractionService(EvacTracker evacTracker) {
+        this(evacTracker, Clock.systemUTC());
+    }
+
+    public ExtractionService(EvacTracker evacTracker, Clock clock) {
         this.evacTracker = Objects.requireNonNull(evacTracker, "evacTracker");
+        this.clock = Objects.requireNonNull(clock, "clock");
+        this.extractionAttemptCooldown = Duration.ofSeconds(1);
+        this.commandCooldown = Duration.ofSeconds(2);
     }
 
     public ExtractionResult beginExtraction(String raidId, UUID playerId, String zoneName, Duration duration) {
@@ -25,6 +40,12 @@ public final class ExtractionService {
         Objects.requireNonNull(duration, "duration");
         if (isExtracted(raidId, playerId)) {
             return ExtractionResult.ALREADY_EXTRACTED;
+        }
+        if (evacTracker.entry(raidId, playerId).isPresent()) {
+            return ExtractionResult.ALREADY_TRACKING;
+        }
+        if (!checkCooldown(extractionAttemptCooldowns, playerId, extractionAttemptCooldown).allowed()) {
+            return ExtractionResult.COOLDOWN;
         }
         boolean started = evacTracker.startCountdown(raidId, playerId, zoneName, duration);
         return started ? ExtractionResult.STARTED : ExtractionResult.ALREADY_TRACKING;
@@ -64,6 +85,17 @@ public final class ExtractionService {
         return extracted != null && extracted.contains(playerId);
     }
 
+    public boolean markExtractionHandled(String raidId, UUID playerId) {
+        Objects.requireNonNull(raidId, "raidId");
+        Objects.requireNonNull(playerId, "playerId");
+        return extractionHandled.computeIfAbsent(raidId, key -> new HashSet<>()).add(playerId);
+    }
+
+    public CooldownResult checkCommandCooldown(UUID playerId) {
+        Objects.requireNonNull(playerId, "playerId");
+        return checkCooldown(commandCooldowns, playerId, commandCooldown);
+    }
+
     public Duration remaining(String raidId, UUID playerId) {
         Objects.requireNonNull(raidId, "raidId");
         Objects.requireNonNull(playerId, "playerId");
@@ -83,6 +115,7 @@ public final class ExtractionService {
         Objects.requireNonNull(raidId, "raidId");
         evacTracker.clearRaid(raidId);
         extractedPlayers.remove(raidId);
+        extractionHandled.remove(raidId);
     }
 
     public List<EvacTracker.EvacSnapshot> evacSnapshots() {
@@ -98,6 +131,23 @@ public final class ExtractionService {
         ALREADY_TRACKING,
         NOT_READY,
         EXTRACTED,
-        ALREADY_EXTRACTED
+        ALREADY_EXTRACTED,
+        COOLDOWN
+    }
+
+    public record CooldownResult(boolean allowed, Duration remaining) {
+    }
+
+    private CooldownResult checkCooldown(Map<UUID, Instant> cooldowns, UUID playerId, Duration cooldown) {
+        Instant now = Instant.now(clock);
+        Instant last = cooldowns.get(playerId);
+        if (last != null) {
+            Duration elapsed = Duration.between(last, now);
+            if (elapsed.compareTo(cooldown) < 0) {
+                return new CooldownResult(false, cooldown.minus(elapsed));
+            }
+        }
+        cooldowns.put(playerId, now);
+        return new CooldownResult(true, Duration.ZERO);
     }
 }

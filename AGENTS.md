@@ -99,6 +99,53 @@ A raid instance:
 
 
 
+## Crate UI & Custom Roll Mechanics
+The plugin uses a custom "rolling" UI for loot containers instead of vanilla inventory access.
+
+### How it Works
+1. **Trigger**: A player right-clicks a `CHEST`, `BARREL`, or `TRAPPED_CHEST` in an active raid.
+2. **Listener**: `LootInteractionListener` cancels the vanilla event and checks `RaidInstance.pendingLoot`.
+3. **Animation**: `CrateAnimationService` opens a 27-slot inventory and starts a 2-second "rolling" phase.
+   - **Rolling**: Random colored glass panes flicker with tick sounds (`BLOCK_NOTE_BLOCK_HAT`).
+   - **Reveal**: Actual loot from the `pendingLoot` map is populated into the inventory.
+4. **Completion**:
+   - Loot is officially "taken" from the `RaidInstance` during the reveal.
+   - If the player closes the inventory before taking everything, items are automatically transferred to their main inventory via `InventoryCloseEvent`.
+
+---
+
+## Loot Pool & Generation Management
+Loot is non-physical until the roll completes. It is generated at raid start and stored in memory.
+
+### 1. Defining Loot Tables (`loot_tables.yml`)
+Add or modify tables here.
+```yaml
+loot_tables:
+  table_id:
+    entries:
+      - id: internal_id
+        material: BUKKIT_MATERIAL
+        weight: 10 # Relative weight (e.g., 10 vs 1)
+        min_amount: 1
+        max_amount: 3
+```
+
+### 2. Configuring Raid Loot (`raids.yml`)
+Link a raid to a table and set the density.
+```yaml
+raids:
+  raid_id:
+    loot_table: table_id
+    target_loot_count: 50 # Total item stacks distributed across all chests
+```
+
+### 3. Distribution Logic
+- `RaidLifecycleCoordinator.spawnRaidLoot` rolls the table `target_loot_count` times.
+- Items are distributed **cyclically** across all markers placed via `/raidadmin edit`.
+- If no containers are found, loot spawns as physical drops at the world spawn.
+
+---
+
 ## TODO Discipline
 - Each TODO should include owner component + scope (CLOUD or INTEGRATION) and a definition of done.
 - Prefer: `TODO(INTEGRATION): <component> — <done criteria>`

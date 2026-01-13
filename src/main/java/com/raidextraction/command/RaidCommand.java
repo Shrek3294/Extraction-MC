@@ -1,5 +1,6 @@
 package com.raidextraction.command;
 
+import com.raidextraction.extraction.ExtractionService;
 import com.raidextraction.integration.RaidLifecycleCoordinator;
 import com.raidextraction.raid.QueueManager;
 import com.raidextraction.raid.RaidInstance;
@@ -11,6 +12,7 @@ import org.bukkit.entity.Player;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,11 +21,16 @@ public final class RaidCommand implements CommandExecutor {
     private final RaidManager raidManager;
     private final QueueManager queueManager;
     private final RaidLifecycleCoordinator raidLifecycleCoordinator;
+    private final ExtractionService extractionService;
 
-    public RaidCommand(RaidManager raidManager, QueueManager queueManager, RaidLifecycleCoordinator raidLifecycleCoordinator) {
+    public RaidCommand(RaidManager raidManager,
+                       QueueManager queueManager,
+                       RaidLifecycleCoordinator raidLifecycleCoordinator,
+                       ExtractionService extractionService) {
         this.raidManager = Objects.requireNonNull(raidManager, "raidManager");
         this.queueManager = Objects.requireNonNull(queueManager, "queueManager");
         this.raidLifecycleCoordinator = Objects.requireNonNull(raidLifecycleCoordinator, "raidLifecycleCoordinator");
+        this.extractionService = Objects.requireNonNull(extractionService, "extractionService");
     }
 
     @Override
@@ -38,6 +45,13 @@ public final class RaidCommand implements CommandExecutor {
         }
         String action = args[0].toLowerCase();
         UUID playerId = player.getUniqueId();
+        ExtractionService.CooldownResult cooldown = extractionService.checkCommandCooldown(playerId);
+        if (!cooldown.allowed()) {
+            long seconds = Math.max(1L, (long) Math.ceil(cooldown.remaining().toMillis() / 1000.0));
+            sender.sendMessage("Slow down. Try again in " + seconds + "s.");
+            raidLifecycleCoordinator.logCommandCooldown(playerId, "/raid " + action, cooldown.remaining());
+            return true;
+        }
         return switch (action) {
             case "join" -> handleJoin(sender, playerId, args);
             case "leave" -> handleLeave(sender, playerId);
@@ -57,6 +71,10 @@ public final class RaidCommand implements CommandExecutor {
         String raidId = args[1];
         if (!raidManager.definitions().containsKey(raidId)) {
             sender.sendMessage("Unknown raid id: " + raidId);
+            return true;
+        }
+        if (raidManager.hasActiveRaidForDefinition(raidId)) {
+            sender.sendMessage("Raid " + raidId + " is already in progress. Please wait for it to finish.");
             return true;
         }
         boolean queued = queueManager.enqueue(raidId, playerId);
@@ -90,7 +108,26 @@ public final class RaidCommand implements CommandExecutor {
         }
         Optional<String> queuedRaid = queueManager.queuedRaid(playerId);
         if (queuedRaid.isEmpty()) {
-            sender.sendMessage("You are not queued for any raid.");
+            List<RaidInstance> activeRaids = raidManager.activeRaids();
+            if (activeRaids.isEmpty()) {
+                sender.sendMessage("No active raids right now.");
+            } else {
+                sender.sendMessage("Active raids:");
+                for (RaidInstance raid : activeRaids) {
+                    sender.sendMessage(" - " + formatRaidSummary(raid));
+                }
+            }
+            sender.sendMessage("Queues:");
+            for (var entry : raidManager.definitions().entrySet()) {
+                String raidId = entry.getKey();
+                int size = queueManager.size(raidId);
+                int minPlayers = entry.getValue().minPlayers();
+                int maxPlayers = entry.getValue().maxPlayers();
+                String active = raidManager.hasActiveRaidForDefinition(raidId) ? "active" : "idle";
+                sender.sendMessage(" - " + raidId + " queue " + size + "/" + minPlayers + " (" + active
+                        + ", max " + maxPlayers + ")");
+            }
+            sender.sendMessage("Use /raid join <raidId> to queue.");
             return true;
         }
         String raidId = queuedRaid.get();
@@ -119,5 +156,13 @@ public final class RaidCommand implements CommandExecutor {
             return seconds + "s";
         }
         return minutes + "m " + String.format("%02d", seconds) + "s";
+    }
+
+    private String formatRaidSummary(RaidInstance raid) {
+        String eta = formatEta(raid);
+        int players = raid.players().size();
+        int maxPlayers = raid.definition().maxPlayers();
+        return raid.definition().id() + " [id=" + raid.id() + "] " + raid.state()
+                + " players: " + players + "/" + maxPlayers + " ETA: " + eta;
     }
 }
