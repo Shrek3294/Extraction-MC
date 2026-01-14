@@ -16,6 +16,19 @@ We are looking for:
 👉 **No Java experience required for playtesting or map building.**
 A data-driven Paper plugin that delivers an extraction-style raid loop for Minecraft: queue players, deploy into a raid region, loot, survive PvE (and later PvP), and extract to keep rewards. Player stash data persists via SQLite so only extracted loot is saved.
 
+## ✅ What’s Already Done
+
+This project is **not a prototype**. Core systems are complete:
+
+- Full raid lifecycle (queue → deploy → extract)
+- SQLite stash persistence
+- World cloning & cleanup
+- Loot tables & weighted rolls
+- Failure handling & cleanup
+- Deterministic raid configs
+
+👉 Contributors can focus on **polish, balance, and content** — not core logic.
+
 ## Branches & Trunk Migration
 - `Cloud`: authoritative trunk for all active development (base new work here).
 - `main-cleanup`: staging branch (this branch) to replace the legacy `main` once docs/hygiene land.
