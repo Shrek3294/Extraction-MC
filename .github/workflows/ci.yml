@@ -27,7 +27,7 @@ jobs:
             exit 0
           fi
 
-          url="$(grep '^distributionUrl=' gradle/wrapper/gradle-wrapper.properties | cut -d'=' -f2- | sed 's/\\\\:/:/g')"
+          url="$(grep '^distributionUrl=' gradle/wrapper/gradle-wrapper.properties | cut -d'=' -f2- | sed 's/\\\\:/:/g' | tr -d '\r')"
           tmp="$(mktemp -d)"
           trap 'rm -rf "$tmp"' EXIT
 

@@ -22,6 +22,7 @@ fi
 DISTRIBUTION_URL=$(grep '^distributionUrl=' "$PROPS_FILE" | cut -d'=' -f2-)
 # distributionUrl in Gradle properties escapes ':' as '\\:'; normalize it for curl.
 DISTRIBUTION_URL=${DISTRIBUTION_URL//\\:/:}
+DISTRIBUTION_URL=${DISTRIBUTION_URL//$'\r'/}
 if [[ -z "$DISTRIBUTION_URL" ]]; then
   echo "distributionUrl not found in $PROPS_FILE" >&2
   exit 1
