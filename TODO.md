@@ -75,6 +75,12 @@
      - [x] (Owner=ResourcePack, Scope=V2.1) Convert Nongko CIT models into vanilla `CustomModelData` overrides. DoD: models load on vanilla clients and match `items.yml` custom_model_data values.
      - [x] (Owner=ResourcePack, Scope=V2.1) Add Windows build script to output a GitHub-hostable resource pack zip. DoD: zip root contains `pack.mcmeta` + `assets/` with `/` paths; outputs SHA1.
 
+9. V2.2: Stash + Loadout Loop
+   - [x] (Owner=Stash, Scope=V2.2) Make player inventory the raid loadout (withdraw from stash to gear up). DoD: player inventory enters raid unchanged; stash access blocked while in raid.
+   - [x] (Owner=Stash, Scope=V2.2) Enforce loadout loss rules. DoD: death/timeout/quit clears the at-risk loadout; extraction deposits carried inventory to stash.
+   - [x] (Owner=Stash, Scope=V2.2) Add max stash capacity + overflow handling. DoD: `stash.max_stacks` caps stored stacks; extraction overflow stays in player inventory; manual deposits are blocked when full.
+   - [ ] (Owner=Progression, Scope=V2.3) Add stash upgrades via level/profile. DoD: stash capacity comes from a persisted player level/profile; configurable capacity tiers; UI shows current capacity; migration notes documented.
+
 10. V2.2: Instanced Raid Worlds (Fresh Map Per Raid)
    - [ ] (Owner=WorldManager, Scope=V2.2) Define folder contract: templates in `/raid_templates/<templateName>/`, instances in `/raid_instances/<raidId>/<instanceId>/`. DoD: documented in README/docs.
    - [ ] (Owner=WorldManager, Scope=V2.2) `loadRaidWorld(templateName)` clones template to new instance folder. DoD: clone completes reliably; instance world loads; returns world name/id.
@@ -85,10 +91,12 @@
    - [ ] (Owner=WorldManager, Scope=V2.2) On plugin enable: scan and clean abandoned instance folders (safe delete/quarantine). DoD: prevents buildup across crashes/restarts.
 
 11. V2.3: Lobby Trader + Progression Loop (Optional)
-   - [ ] (Owner=Trader, Scope=V2.3) Add `credits` to player profile (SQLite). DoD: persisted reliably; safe from dupes.
-   - [ ] (Owner=LootConfig, Scope=V2.3) Add item values and categories in loot config. DoD: junk items sell for credits; rare items sell for more.
-   - [ ] (Owner=Trader, Scope=V2.3) Implement `TraderNPC` interaction (sell junk for credits, buy starter kit). DoD: basic buy/sell loop works; no dupe exploits.
-   - [ ] (Owner=Trader, Scope=V2.3) Config-driven kit definition in YAML. DoD: easy balancing without code changes.
+   - [x] (Owner=Trader, Scope=V2.3) Add `credits` to player profile (SQLite). DoD: persisted reliably; safe from dupes.
+   - [x] (Owner=Progression, Scope=V2.3) Add XP/level system (extraction-focused). DoD: XP awards are configurable; level is persisted; extraction success updates XP/level; no XP dupes on retries/relogs.
+   - [x] (Owner=UI, Scope=V2.3) Add HUD showing server name + money + level. DoD: vanilla UI (scoreboard/tablist/actionbar) shows configured `server_name` plus `credits` and `level`; updates live; togglable per-player and/or config.
+   - [x] (Owner=LootConfig, Scope=V2.3) Add item values and categories in loot config. DoD: junk items sell for credits; rare items sell for more.
+   - [x] (Owner=Trader, Scope=V2.3) Implement `TraderNPC` interaction (sell junk for credits, buy starter kit). DoD: basic buy/sell loop works; no dupe exploits.
+   - [x] (Owner=Trader, Scope=V2.3) Config-driven kit definition in YAML. DoD: easy balancing without code changes.
 
 12. Backlog / Nice-to-Have (Post v2)
    - [ ] (Owner=UI, Scope=Backlog) Bossbar styling + icons (vanilla only). DoD: styling configurable without client mods.
@@ -102,7 +110,8 @@
 - Do not call Bukkit APIs off the main thread.
 - Loot commit to stash happens only on successful extraction.
 - Extraction is idempotent; no double rewards.
-- Failure (death/quit/timeout) restores pre-raid inventory snapshot.
+- Failure (death/quit/timeout) clears the at-risk loadout (player inventory).
+- Admin cancel restores the pre-raid inventory snapshot (rollback behavior).
 - Do not commit local server files: `/server/`, world folders, logs, DBs.
 
 ## Logging Requirements

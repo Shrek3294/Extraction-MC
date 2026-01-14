@@ -11,6 +11,7 @@ import com.raidextraction.extraction.EvacTracker;
 import com.raidextraction.extraction.ExtractionService;
 import com.raidextraction.loot.LootService;
 import com.raidextraction.loot.LootTableRegistry;
+import com.raidextraction.loot.LootPricingService;
 import com.raidextraction.integration.ItemDataMapper;
 import com.raidextraction.integration.PaperLootItemFactory;
 import com.raidextraction.integration.InventorySnapshotService;
@@ -26,6 +27,7 @@ import com.raidextraction.integration.WorldManager;
 import com.raidextraction.raid.QueueManager;
 import com.raidextraction.raid.RaidManager;
 import com.raidextraction.stash.SQLiteStashRepository;
+import com.raidextraction.stash.FixedStashCapacityProvider;
 import com.raidextraction.stash.StashService;
 import com.raidextraction.listener.ExtractionListener;
 import com.raidextraction.listener.LootInteractionListener;
@@ -42,6 +44,11 @@ import com.raidextraction.listener.CustomEnchantListener;
 import com.raidextraction.magic.ManaHudService;
 import com.raidextraction.magic.PlayerManaService;
 import com.raidextraction.magic.SpellCastingService;
+import com.raidextraction.profile.PlayerProfileService;
+import com.raidextraction.profile.SQLitePlayerProfileRepository;
+import com.raidextraction.trader.TraderService;
+import com.raidextraction.trader.TraderView;
+import com.raidextraction.ux.HudService;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.time.Clock;
@@ -57,7 +64,10 @@ public final class RaidExtractionPlugin extends JavaPlugin {
     private RaidManager raidManager;
     private LootTableRegistry lootTableRegistry;
     private LootService lootService;
+    private LootPricingService lootPricingService;
     private StashService stashService;
+    private PlayerProfileService profileService;
+    private HudService hudService;
     private ItemDataMapper itemDataMapper;
     private ExtractionService extractionService;
     private InventorySnapshotService inventorySnapshotService;
@@ -80,6 +90,8 @@ public final class RaidExtractionPlugin extends JavaPlugin {
     private ManaHudService manaHudService;
     private SpellCastingService spellCastingService;
     private CustomEnchantListener customEnchantListener;
+    private TraderService traderService;
+    private TraderView traderView;
 
     @Override
     public void onLoad() {
@@ -194,7 +206,11 @@ public final class RaidExtractionPlugin extends JavaPlugin {
         queueManager = new QueueManager();
         raidManager = new RaidManager(configManager.getRaidDefinitions(), queueManager, clock);
         lootTableRegistry = new LootTableRegistry(configManager.getLootTableDefinitions());
-        stashService = new StashService(new SQLiteStashRepository(getDataFolder().toPath().resolve("stash.db")));
+        stashService = new StashService(
+                new SQLiteStashRepository(getDataFolder().toPath().resolve("stash.db")),
+                new FixedStashCapacityProvider(configManager.getStashMaxStacks()));
+        profileService = new PlayerProfileService(
+                new SQLitePlayerProfileRepository(getDataFolder().toPath().resolve("profiles.db")));
         itemDataMapper = new ItemDataMapper(getLogger());
         itemKeys = new ItemKeys(this);
         customItemRegistry = new CustomItemRegistry(configManager.getItemsDefinition());
@@ -205,13 +221,19 @@ public final class RaidExtractionPlugin extends JavaPlugin {
         weaponGuideBookFactory = new WeaponGuideBookFactory(configManager.getItemsDefinition());
         lootService = new LootService(lootTableRegistry, new Random(),
                 new PaperLootItemFactory(customItemRegistry, customItemFactory, itemDataMapper));
+        lootPricingService = new LootPricingService(lootTableRegistry.definitions());
         manaService = new PlayerManaService(this, configManager.getItemsDefinition().manaMax(),
                 configManager.getItemsDefinition().manaRegenPerSecond());
         manaService.start();
         manaHudService = new ManaHudService(this, itemKeys, manaService);
         manaHudService.start();
         spellCastingService = new SpellCastingService(this, itemKeys, configManager.getItemsDefinition(), manaService);
+        hudService = new HudService(this, configManager, profileService);
+        hudService.start();
         customEnchantListener = new CustomEnchantListener(this, itemKeys, customEnchantRegistry);
+        traderService = new TraderService(this, configManager, lootPricingService, itemKeys, customItemRegistry, customItemFactory);
+        traderService.ensureNpcPresent();
+        traderView = new TraderView(this, traderService, profileService);
         extractionService = new ExtractionService(new EvacTracker(clock), clock);
         inventorySnapshotService = new PaperInventorySnapshotService(this, itemDataMapper);
         regionProvider = new PaperRegionProvider(this);
@@ -229,6 +251,7 @@ public final class RaidExtractionPlugin extends JavaPlugin {
                 extractionService,
                 lootService,
                 stashService,
+                profileService,
                 inventorySnapshotService,
                 teleportService,
                 regionProvider,
@@ -239,10 +262,10 @@ public final class RaidExtractionPlugin extends JavaPlugin {
     private void registerCommands() {
         if (getCommand("raid") != null) {
             getCommand("raid").setExecutor(
-                    new RaidCommand(raidManager, queueManager, raidLifecycleCoordinator, extractionService));
+                    new RaidCommand(raidManager, queueManager, raidLifecycleCoordinator, extractionService, hudService));
         }
         if (getCommand("stash") != null) {
-            getCommand("stash").setExecutor(new StashCommand(stashView));
+            getCommand("stash").setExecutor(new StashCommand(stashView, raidManager));
         }
         if (getCommand("weapon") != null) {
             getCommand("weapon").setExecutor(
@@ -270,6 +293,8 @@ public final class RaidExtractionPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(spellCastingService, this);
         getServer().getPluginManager().registerEvents(customEnchantListener, this);
         getServer().getPluginManager().registerEvents(weaponBenchView, this);
+        getServer().getPluginManager().registerEvents(hudService, this);
+        getServer().getPluginManager().registerEvents(traderView, this);
         getServer().getPluginManager().registerEvents(
                 new LootInteractionListener(raidManager, crateAnimationService, getLogger()),
                 this);

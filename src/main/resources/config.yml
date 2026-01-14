@@ -12,3 +12,22 @@ lobbySpawn:
 raidWorld: world
 evac_duration_seconds: 10 # Seconds players must hold in an evac zone before extraction completes.
 announce_start: true
+
+# Player stash (persistent safe storage). This limits total stored stacks; overflow stays in inventory
+# when extracting, and manual deposits are blocked when full. Future versions can upgrade this value
+# based on player progression.
+stash:
+  max_stacks: 54
+
+# Optional: extraction-focused progression. XP is granted on successful extraction (idempotent per raid).
+progression:
+  enabled: true
+  extraction_success_xp: 25
+  xp_per_stack: 1
+  xp_per_level: 100
+
+# Optional: vanilla HUD showing server name + credits + level (scoreboard sidebar).
+hud:
+  enabled: true
+  server_name: "Raid Extraction"
+  update_ticks: 40

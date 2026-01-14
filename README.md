@@ -1,6 +1,6 @@
 # Raid Extraction (Paper) Plugin
 
-A data-driven Paper plugin that delivers an extraction-style raid loop for Minecraft: queue players, deploy into a raid region, loot, survive PvE (and later PvP), and extract to keep rewards. Player stash data persists via SQLite so only extracted loot is saved.
+A data-driven Paper plugin that delivers an extraction-style raid loop for Minecraft: queue players, deploy into a raid region, loot, survive PvE (and later PvP), and extract to keep rewards. Player stash data persists via SQLite; players build a loadout by withdrawing from their stash, and extracting deposits their raid inventory back into the stash (up to the configured stash capacity).
 
 ## Branches & Trunk Migration
 - `Cloud`: authoritative trunk for all active development (base new work here).
@@ -38,12 +38,14 @@ A data-driven Paper plugin that delivers an extraction-style raid loop for Minec
 - **Reset/Cleanup:** restore players to lobby, cancel tasks, reset containers, and clear entities/effects.
 
 ## Commands
-- `/raid join|leave|status <raidId>` ?? status shows raid state, player counts, and remaining time for active raids.
+- `/raid join|leave|status|hud <raidId>` ?? status shows raid state, player counts, and remaining time for active raids; hud toggles the credits/level scoreboard.
 - `/raidadmin start <raidId>`, `stop|cancel <activeRaidId>`, `force-extract <playerName|playerUuid>` ?? admin controls for testing and moderation.
 - `/raidadmin edit <raidId>`, `exit`, `save`, `validate`, `undo` ?? editor flow for spawns, evac zones, and loot markers.
 - `/raidadmin lootchance <percent>` ?? set default chance for new loot markers (and update the targeted container).
 - `/raidadmin lootpreview` ?? toggle preview items in all loot containers while editing.
-- `/stash` ?? opens a stash GUI for browsing and withdrawing extracted loot (persistence runs off-thread, results synced on the main thread).
+- `/stash` ?? opens a stash GUI for withdrawing and depositing items (shift-click from your inventory to deposit).
+
+- Optional lobby trader: right-click the spawned `Trader` NPC (configured in `trader.yml`) to sell loot for credits and buy kits.
 
 ## Repository Status
 Core raid loop services (queue → raid → loot → extract → stash), stash persistence, extraction countdowns, and command/listener stubs are in place for the cloud-safe build phase. See `TODO.md` for the implementation roadmap and the local development checklist that resumes once a Paper server is available.
@@ -122,7 +124,7 @@ raidextraction/
 ```
 
 ## Config Files
-- **config.yml:** global settings (debug flags, `lobbyWorld`/`lobbySpawn`, `raidWorld`, evac countdown duration).
+- **config.yml:** global settings (debug flags, `lobbyWorld`/`lobbySpawn`, `raidWorld`, evac countdown duration, `stash.max_stacks`).
 - **raids.yml:** raid definitions (world, lobby spawn, raid region, player spawns, evac zones, duration).
 - **loot_tables.yml:** named loot tables with weighted entries (material, amount range, enchantments later).
 - **director.yml:** placeholder for threat curves/events (future).
@@ -163,17 +165,17 @@ raidextraction/
 Adapter interfaces (`InventorySnapshotService`, `RegionProvider`, `TeleportService`) are stubbed; implement them when wiring
 Paper APIs.
 - **Raid deploy:** implement teleport/spawn logic and region checks before switching to `IN_RAID`.
-- **Inventory snapshot/restore:** capture inventories on raid start, restore on failure, and commit on extraction.
+- **Loadout + stash:** player inventory is the at-risk loadout; extraction deposits it to stash; death/timeout/quit clears it; inventory snapshots are used only for deploy rollback/admin cancel.
 - **Loot spawn:** fill chests or drop loot using `LootService` and `LootTableRegistry`.
 - **Evac zones:** hook movement/listener logic to start/cancel evac countdowns and to mark extraction complete.
-- **Stash UI:** `/stash` opens the stash GUI; validate withdraw flows and persistence on a live server.
+- **Stash UI:** `/stash` opens the stash GUI; validate withdraw + deposit (shift-click) flows and stash capacity messaging on a live server.
 - **Admin tooling:** `/raidadmin start|stop|cancel|force-extract` available for raid control; verify messaging/state in Paper.
 - **Resilience:** handle server restarts by rehydrating active raids and eviction of stale evac timers.
 
 ## Common Pitfalls
 - Spaghetti state changes: always use the instance to transition states.
 - Async misuse: never teleport or modify inventories off-thread.
-- Dupes: commit stash only once per extraction; clear raid inventories on death/timeout.
+- Dupes: commit stash only once per extraction; clear raid inventories on death/timeout/quit.
 - Region resets: keep environments controlled in V1; disable block breaking if needed.
 
 ## License

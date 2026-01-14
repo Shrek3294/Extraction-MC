@@ -16,8 +16,8 @@ class LootServiceTest {
 
     @Test
     void weightedLootRollsFavorHigherWeightEntries() {
-        LootEntry common = new LootEntry("common", "STONE", 3, 1, 1);
-        LootEntry rare = new LootEntry("rare", "DIAMOND", 1, 1, 1);
+        LootEntry common = new LootEntry("common", "STONE", "", 0L, 3, 1, 1);
+        LootEntry rare = new LootEntry("rare", "DIAMOND", "", 0L, 1, 1, 1);
         LootTableDefinition table = new LootTableDefinition("table", List.of(common, rare));
         LootTableRegistry registry = new LootTableRegistry(Map.of(table.id(), table));
         LootService service = new LootService(registry, new Random(42),

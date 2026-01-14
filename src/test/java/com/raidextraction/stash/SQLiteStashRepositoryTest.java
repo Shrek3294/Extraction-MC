@@ -14,7 +14,7 @@ class SQLiteStashRepositoryTest {
     @Test
     void stashPersistsAcrossReloads(@TempDir Path tempDir) {
         Path database = tempDir.resolve("stash.db");
-        StashService stashService = new StashService(new SQLiteStashRepository(database));
+        StashService stashService = new StashService(new SQLiteStashRepository(database), new FixedStashCapacityProvider(999));
         UUID playerId = UUID.randomUUID();
 
         List<ItemData> items = List.of(
@@ -23,7 +23,7 @@ class SQLiteStashRepositoryTest {
 
         stashService.replace(playerId, items);
 
-        StashService reloadedService = new StashService(new SQLiteStashRepository(database));
+        StashService reloadedService = new StashService(new SQLiteStashRepository(database), new FixedStashCapacityProvider(999));
         assertEquals(items, reloadedService.load(playerId));
     }
 }

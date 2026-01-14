@@ -9,12 +9,15 @@ import com.raidextraction.editor.MapEditorStorage;
 import com.raidextraction.extraction.EvacTracker;
 import com.raidextraction.extraction.ExtractionService;
 import com.raidextraction.loot.LootService;
+import com.raidextraction.profile.PlayerProfileRepository;
+import com.raidextraction.profile.PlayerProfileService;
 import com.raidextraction.raid.QueueManager;
 import com.raidextraction.raid.RaidInstance;
 import com.raidextraction.raid.RaidManager;
 import com.raidextraction.raid.RaidState;
 import com.raidextraction.stash.ItemData;
 import com.raidextraction.stash.StashService;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -76,6 +79,11 @@ public final class RaidLifecycleCoordinator {
     private final Map<UUID, String> activeEvacZones = new HashMap<>();
     private final Map<UUID, BukkitTask> evacCountdowns = new HashMap<>();
     private final int evacDurationSeconds;
+    private final PlayerProfileService profileService;
+    private final boolean progressionEnabled;
+    private final long extractionSuccessXp;
+    private final long xpPerExtractedStack;
+    private final int xpPerLevel;
 
     public RaidLifecycleCoordinator(JavaPlugin plugin,
             ConfigManager configManager,
@@ -84,6 +92,7 @@ public final class RaidLifecycleCoordinator {
             ExtractionService extractionService,
             LootService lootService,
             StashService stashService,
+            PlayerProfileService profileService,
             InventorySnapshotService inventorySnapshotService,
             TeleportService teleportService,
             RegionProvider regionProvider,
@@ -96,6 +105,7 @@ public final class RaidLifecycleCoordinator {
         this.extractionService = Objects.requireNonNull(extractionService, "extractionService");
         this.lootService = Objects.requireNonNull(lootService, "lootService");
         this.stashService = Objects.requireNonNull(stashService, "stashService");
+        this.profileService = Objects.requireNonNull(profileService, "profileService");
         this.inventorySnapshotService = Objects.requireNonNull(inventorySnapshotService, "inventorySnapshotService");
         this.teleportService = Objects.requireNonNull(teleportService, "teleportService");
         this.regionProvider = Objects.requireNonNull(regionProvider, "regionProvider");
@@ -104,6 +114,10 @@ public final class RaidLifecycleCoordinator {
         this.logger = plugin.getLogger();
         this.stateStore = new RaidStateStore(plugin.getDataFolder().toPath().resolve("raid_state.yml"), this.logger);
         this.evacDurationSeconds = Math.max(configManager.getMainConfig().getInt("evac_duration_seconds", 10), 1);
+        this.progressionEnabled = configManager.isProgressionEnabled();
+        this.extractionSuccessXp = Math.max(0L, configManager.getExtractionSuccessXp());
+        this.xpPerExtractedStack = Math.max(0L, configManager.getXpPerExtractedStack());
+        this.xpPerLevel = Math.max(1, configManager.getXpPerLevel());
     }
 
     public Optional<RaidInstance> startFromQueue(String raidDefinitionId) {
@@ -249,6 +263,7 @@ public final class RaidLifecycleCoordinator {
             Player player = plugin.getServer().getPlayer(playerId);
             if (player != null && player.isOnline()) {
                 sendFailureFeedback(player, "You abandoned the raid.");
+                clearInventory(player);
             }
             logEvent(Level.INFO, "raid_failure",
                     "raidId", raid.id(),
@@ -259,7 +274,6 @@ public final class RaidLifecycleCoordinator {
             activeEvacZones.remove(playerId);
             cancelEvacCountdown(playerId);
             extractionService.cancelExtraction(raid.id(), playerId);
-            inventorySnapshotService.restore(playerId);
             inventorySnapshotService.clear(playerId);
             if (raid.players().isEmpty()) {
                 endRaid(raid.id(), "Raid ended because all players left.", false, false, false);
@@ -270,7 +284,7 @@ public final class RaidLifecycleCoordinator {
 
     public void handlePlayerDeath(UUID playerId) {
         findRaidByPlayer(playerId).ifPresent(raid -> handleFailure(raid, playerId,
-                "You died in the raid. Returning to lobby with your pre-raid loadout."));
+                "You died in the raid and lost your loadout."));
     }
 
     public void handlePlayerMove(UUID playerId) {
@@ -374,7 +388,6 @@ public final class RaidLifecycleCoordinator {
                 continue;
             }
             inventorySnapshotService.snapshot(playerId);
-            player.getInventory().clear();
             if (!teleportService.sendToRaid(playerId, definition)) {
                 raidInstance.removePlayer(playerId);
                 inventorySnapshotService.restore(playerId);
@@ -611,12 +624,12 @@ public final class RaidLifecycleCoordinator {
         cancelRaidTimeout(raidInstance.id());
         long remainingSeconds = Duration.between(Instant.now(), deadline).getSeconds();
         if (remainingSeconds <= 0) {
-            endRaid(raidInstance.id(), "Raid ended: time expired.", true, true, true);
+            endRaid(raidInstance.id(), "Raid ended: time expired.", false, true, true);
             return;
         }
         long ticks = remainingSeconds * 20L;
         BukkitTask task = plugin.getServer().getScheduler()
-                .runTaskLater(plugin, () -> endRaid(raidInstance.id(), "Raid ended: time expired.", true, true, true),
+                .runTaskLater(plugin, () -> endRaid(raidInstance.id(), "Raid ended: time expired.", false, true, true),
                         ticks);
         raidTimeouts.put(raidInstance.id(), task);
         raidDeadlines.put(raidInstance.id(), deadline);
@@ -799,7 +812,7 @@ public final class RaidLifecycleCoordinator {
             return;
         }
         Player player = plugin.getServer().getPlayer(playerId);
-        List<ItemData> carried = player != null ? snapshotInventory(player) : List.of();
+        List<ItemData> carried = player != null ? snapshotAndClearInventory(player) : List.of();
         logEvent(Level.INFO, "extraction_success",
                 "raidId", raidInstance.id(),
                 "playerId", playerId,
@@ -810,9 +823,7 @@ public final class RaidLifecycleCoordinator {
             }
             clearActionBar(player);
         }
-        if (inventorySnapshotService.restore(playerId)) {
-            inventorySnapshotService.clear(playerId);
-        }
+        inventorySnapshotService.clear(playerId);
 
         teleportService.sendToLobby(playerId, configManager.getLobbySpawnConfig());
         raidInstance.removePlayer(playerId);
@@ -822,6 +833,8 @@ public final class RaidLifecycleCoordinator {
         outOfBoundsTracker.remove(playerId);
         cleanupRaidIfEmpty(raidInstance, "Raid complete. All players have extracted or left.");
 
+        awardExtractionXpAsync(raidInstance.id(), playerId, carried.size());
+
         if (carried.isEmpty()) {
             if (player != null && player.isOnline()) {
                 player.sendMessage("Extraction complete! No items to stash.");
@@ -829,7 +842,66 @@ public final class RaidLifecycleCoordinator {
             return;
         }
 
-        persistStashAsync(raidInstance.id(), playerId, carried, carried.size());
+        persistStashAsync(raidInstance.id(), playerId, carried);
+    }
+
+    private void awardExtractionXpAsync(String raidId, UUID playerId, int extractedStacks) {
+        if (!progressionEnabled) {
+            return;
+        }
+        long xpFromStacks = safeMultiply(xpPerExtractedStack, Math.max(0, extractedStacks));
+        long award = safeAdd(extractionSuccessXp, xpFromStacks);
+        if (award <= 0) {
+            return;
+        }
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            PlayerProfileRepository.AwardXpResult result;
+            try {
+                result = profileService.awardExtractionXp(raidId, playerId, award, xpPerLevel);
+            } catch (Exception error) {
+                logger.log(Level.WARNING, formatEvent("profile_xp_award_failed",
+                        "raidId", raidId,
+                        "playerId", playerId,
+                        "reason", error.getMessage()), error);
+                return;
+            }
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                if (!result.awarded()) {
+                    return;
+                }
+                Player player = plugin.getServer().getPlayer(playerId);
+                if (player != null && player.isOnline()) {
+                    player.sendMessage("Extraction XP: +" + award + " (Level " + result.profile().level() + ")");
+                }
+            });
+        });
+    }
+
+    private long safeAdd(long a, long b) {
+        long result = a + b;
+        if (((a ^ result) & (b ^ result)) < 0) {
+            return Long.MAX_VALUE;
+        }
+        return result;
+    }
+
+    private long safeMultiply(long value, long multiplier) {
+        if (value == 0 || multiplier == 0) {
+            return 0L;
+        }
+        if (value > 0 && multiplier > 0 && value > Long.MAX_VALUE / multiplier) {
+            return Long.MAX_VALUE;
+        }
+        if (value < 0 && multiplier < 0 && value < Long.MAX_VALUE / multiplier) {
+            return Long.MAX_VALUE;
+        }
+        if (value > 0 && multiplier < 0 && multiplier < Long.MIN_VALUE / value) {
+            return Long.MIN_VALUE;
+        }
+        if (value < 0 && multiplier > 0 && value < Long.MIN_VALUE / multiplier) {
+            return Long.MIN_VALUE;
+        }
+        return value * multiplier;
     }
 
     private void handleFailure(RaidInstance raidInstance, UUID playerId, String message) {
@@ -839,9 +911,9 @@ public final class RaidLifecycleCoordinator {
                 "reason", message);
         Player player = plugin.getServer().getPlayer(playerId);
         if (player != null && player.isOnline()) {
-            sendFailureFeedback(player, "Extraction failed.");
+            sendFailureFeedback(player, "Loadout lost.");
             clearActionBar(player);
-            inventorySnapshotService.restore(playerId);
+            clearInventory(player);
             teleportService.sendToLobby(playerId, configManager.getLobbySpawnConfig());
             if (message != null && !message.isEmpty()) {
                 player.sendMessage(message);
@@ -870,18 +942,28 @@ public final class RaidLifecycleCoordinator {
             }
             items.add(itemDataMapper.toItemData(stack));
         }
-        player.getInventory().clear();
-        player.updateInventory();
         return items;
     }
 
-    private void persistStashAsync(String raidId, UUID playerId, List<ItemData> items, int deliveredStacks) {
+    private List<ItemData> snapshotAndClearInventory(Player player) {
+        List<ItemData> items = snapshotInventory(player);
+        clearInventory(player);
+        return items;
+    }
+
+    private void clearInventory(Player player) {
+        player.getInventory().clear();
+        player.getInventory().setArmorContents(new ItemStack[4]);
+        player.getInventory().setItemInOffHand(new ItemStack(Material.AIR));
+        player.updateInventory();
+    }
+
+    private void persistStashAsync(String raidId, UUID playerId, List<ItemData> items) {
         plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
             boolean success = false;
+            StashService.AppendResult appendResult = null;
             try {
-                List<ItemData> stashItems = new ArrayList<>(stashService.load(playerId));
-                stashItems.addAll(items);
-                stashService.replace(playerId, stashItems);
+                appendResult = stashService.addItems(playerId, items);
                 success = true;
             } catch (Exception error) {
                 logger.log(Level.WARNING, formatEvent("stash_save_failed",
@@ -890,18 +972,41 @@ public final class RaidLifecycleCoordinator {
                         "reason", error.getMessage()), error);
             }
             boolean finalSuccess = success;
+            StashService.AppendResult finalAppendResult = appendResult;
             plugin.getServer().getScheduler().runTask(plugin, () -> {
                 Player player = plugin.getServer().getPlayer(playerId);
                 if (player != null && player.isOnline()) {
                     if (finalSuccess) {
-                        player.sendMessage(
-                                "Extraction complete! " + deliveredStacks + " item stack(s) sent to your stash.");
+                        int deposited = finalAppendResult == null ? items.size() : finalAppendResult.added().size();
+                        int overflow = finalAppendResult == null ? 0 : finalAppendResult.overflow().size();
+                        player.sendMessage("Extraction complete! " + deposited + " stack(s) deposited to your stash.");
+                        if (overflow > 0) {
+                            restoreItemsToPlayer(player, finalAppendResult.overflow());
+                            player.sendMessage("Your stash is full; " + overflow + " stack(s) kept in your inventory.");
+                        }
                     } else {
-                        player.sendMessage("Extraction finished, but saving to your stash failed. Contact an admin.");
+                        restoreItemsToPlayer(player, items);
+                        player.sendMessage(
+                                "Extraction finished, but saving to your stash failed. Restored items to your inventory.");
                     }
                 }
             });
         });
+    }
+
+    private void restoreItemsToPlayer(Player player, List<ItemData> items) {
+        if (items == null || items.isEmpty()) {
+            return;
+        }
+        for (ItemData itemData : items) {
+            ItemStack stack = itemDataMapper.toItemStack(itemData);
+            if (stack == null || stack.getType().isAir() || stack.getAmount() <= 0) {
+                continue;
+            }
+            Map<Integer, ItemStack> leftovers = player.getInventory().addItem(stack);
+            leftovers.values().forEach(leftover -> player.getWorld().dropItemNaturally(player.getLocation(), leftover));
+        }
+        player.updateInventory();
     }
 
     private void startEvacCountdownTask(RaidInstance raidInstance, UUID playerId,
@@ -1102,6 +1207,8 @@ public final class RaidLifecycleCoordinator {
                 extractionService.cancelExtraction(raidId, playerId);
                 if (restoreInventory) {
                     inventorySnapshotService.restore(playerId);
+                } else {
+                    clearInventory(player);
                 }
                 if (sendToLobby) {
                     teleportService.sendToLobby(playerId, configManager.getLobbySpawnConfig());

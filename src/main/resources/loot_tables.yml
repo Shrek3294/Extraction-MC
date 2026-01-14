@@ -4,6 +4,8 @@ loot_tables:
     entries:
       - id: medical_bandage
         material: PAPER
+        category: junk
+        credits: 2
         weight: 10
         min_amount: 1
         max_amount: 3
@@ -29,16 +31,22 @@ loot_tables:
         max_amount: 1
       - id: venom_vial
         material: HONEY_BOTTLE
+        category: rare
+        credits: 10
         weight: 8
         min_amount: 1
         max_amount: 1
       - id: wind_rune
         material: FEATHER
+        category: rare
+        credits: 10
         weight: 8
         min_amount: 1
         max_amount: 1
       - id: splinter_core
         material: BONE
+        category: rare
+        credits: 10
         weight: 8
         min_amount: 1
         max_amount: 1
@@ -59,6 +67,8 @@ loot_tables:
         max_amount: 1
       - id: canned_food
         material: BREAD
+        category: junk
+        credits: 1
         weight: 12
         min_amount: 2
         max_amount: 4
@@ -126,16 +136,22 @@ loot_tables:
         max_amount: 1
       - id: venom_vial
         material: HONEY_BOTTLE
+        category: rare
+        credits: 10
         weight: 8
         min_amount: 1
         max_amount: 1
       - id: wind_rune
         material: FEATHER
+        category: rare
+        credits: 10
         weight: 8
         min_amount: 1
         max_amount: 1
       - id: splinter_core
         material: BONE
+        category: rare
+        credits: 10
         weight: 8
         min_amount: 1
         max_amount: 1

@@ -7,9 +7,9 @@ commands:
   raid:
     description: Join or check raid queues.
     permission: raid.user
-    usage: "/raid <join|leave|status>"
+    usage: "/raid <join|leave|status|hud>"
   stash:
-    description: View or manage extracted loot stored in your stash.
+    description: View or manage loot stored in your stash.
     permission: raid.user
     usage: "/stash"
   weapon:

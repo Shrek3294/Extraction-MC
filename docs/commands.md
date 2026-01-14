@@ -9,10 +9,19 @@ This document lists the currently implemented commands and what they do.
 - `/raid join <raidId>`: Join the queue for a specific raid definition.
 - `/raid leave`: Leave your current raid queue.
 - `/raid status`: Show your raid status, active raids, and queue sizes.
+- `/raid hud`: Toggle the scoreboard HUD (server name, credits, level) for yourself.
 
 ### /stash
 
 - `/stash`: Open your stash UI.
+  - Click items in the stash to withdraw into your inventory.
+  - Shift-click items from your inventory to deposit into the stash (blocked when the stash is full).
+
+## Lobby Trader (Optional)
+
+When `trader.yml` is enabled, a lobby `Trader` NPC can be right-clicked to:
+- Sell configured loot categories for credits.
+- Buy a configured kit (default: `starter`).
 
 ## Admin Commands
 

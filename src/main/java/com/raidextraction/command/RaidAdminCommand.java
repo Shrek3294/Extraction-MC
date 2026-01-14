@@ -143,7 +143,7 @@ public final class RaidAdminCommand implements CommandExecutor {
         }
         boolean success = raidLifecycleCoordinator.forceExtract(targetId);
         sender.sendMessage(success
-                ? "Force-extracted player " + args[1] + " and committed their stash."
+                ? "Force-extracted player " + args[1] + " and committed their raid inventory to stash."
                 : "Player is not currently in an active raid.");
         return true;
     }

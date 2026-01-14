@@ -29,6 +29,7 @@ public final class ConfigManager {
     private FileConfiguration lootTablesConfig;
     private FileConfiguration directorConfig;
     private FileConfiguration itemsConfig;
+    private FileConfiguration traderConfig;
 
     private Map<String, RaidDefinition> raidDefinitions = Collections.emptyMap();
     private Map<String, LootTableDefinition> lootTableDefinitions = Collections.emptyMap();
@@ -45,12 +46,14 @@ public final class ConfigManager {
         ensureResource("loot_tables.yml");
         ensureResource("director.yml");
         ensureResource("items.yml");
+        ensureResource("trader.yml");
 
         mainConfig = loadConfig("config.yml");
         raidsConfig = loadConfig("raids.yml");
         lootTablesConfig = loadConfig("loot_tables.yml");
         directorConfig = loadConfig("director.yml");
         itemsConfig = loadConfig("items.yml");
+        traderConfig = loadConfig("trader.yml");
 
         lootTableDefinitions = parseLootTables();
         raidDefinitions = parseRaids();
@@ -91,6 +94,70 @@ public final class ConfigManager {
                 (float) lobbySpawn.getDouble("pitch", 0));
     }
 
+    public int getStashMaxStacks() {
+        ConfigurationSection stashSection = mainConfig.getConfigurationSection("stash");
+        if (stashSection == null) {
+            return mainConfig.getInt("stash_max_stacks", 54);
+        }
+        return stashSection.getInt("max_stacks", 54);
+    }
+
+    public boolean isProgressionEnabled() {
+        ConfigurationSection section = mainConfig.getConfigurationSection("progression");
+        if (section == null) {
+            return mainConfig.getBoolean("progression_enabled", false);
+        }
+        return section.getBoolean("enabled", false);
+    }
+
+    public long getExtractionSuccessXp() {
+        ConfigurationSection section = mainConfig.getConfigurationSection("progression");
+        if (section == null) {
+            return mainConfig.getLong("extraction_success_xp", 25L);
+        }
+        return section.getLong("extraction_success_xp", 25L);
+    }
+
+    public long getXpPerExtractedStack() {
+        ConfigurationSection section = mainConfig.getConfigurationSection("progression");
+        if (section == null) {
+            return mainConfig.getLong("xp_per_stack", 1L);
+        }
+        return section.getLong("xp_per_stack", 1L);
+    }
+
+    public int getXpPerLevel() {
+        ConfigurationSection section = mainConfig.getConfigurationSection("progression");
+        if (section == null) {
+            return mainConfig.getInt("xp_per_level", 100);
+        }
+        return section.getInt("xp_per_level", 100);
+    }
+
+    public boolean isHudEnabled() {
+        ConfigurationSection section = mainConfig.getConfigurationSection("hud");
+        if (section == null) {
+            return mainConfig.getBoolean("hud_enabled", true);
+        }
+        return section.getBoolean("enabled", true);
+    }
+
+    public String getHudServerName() {
+        ConfigurationSection section = mainConfig.getConfigurationSection("hud");
+        if (section == null) {
+            return mainConfig.getString("server_name", "Raid Extraction");
+        }
+        return section.getString("server_name", "Raid Extraction");
+    }
+
+    public int getHudUpdateTicks() {
+        ConfigurationSection section = mainConfig.getConfigurationSection("hud");
+        if (section == null) {
+            return mainConfig.getInt("hud_update_ticks", 40);
+        }
+        return Math.max(1, section.getInt("update_ticks", 40));
+    }
+
     public void setLobbySpawn(org.bukkit.Location location) {
         if (location == null || location.getWorld() == null) {
             return;
@@ -111,6 +178,10 @@ public final class ConfigManager {
 
     public FileConfiguration getDirectorConfig() {
         return directorConfig;
+    }
+
+    public FileConfiguration getTraderConfig() {
+        return traderConfig;
     }
 
     public Map<String, RaidDefinition> getRaidDefinitions() {
@@ -158,6 +229,8 @@ public final class ConfigManager {
                 LootEntry entry = new LootEntry(
                         asString(entryMap.get("id"), ""),
                         asString(entryMap.get("material"), ""),
+                        asString(entryMap.get("category"), ""),
+                        asLong(entryMap.get("credits"), 0L),
                         asInt(entryMap.get("weight"), 1),
                         asInt(entryMap.get("min_amount"), 1),
                         asInt(entryMap.get("max_amount"), 1));
@@ -247,6 +320,13 @@ public final class ConfigManager {
     private int asInt(Object value, int fallback) {
         if (value instanceof Number number) {
             return number.intValue();
+        }
+        return fallback;
+    }
+
+    private long asLong(Object value, long fallback) {
+        if (value instanceof Number number) {
+            return number.longValue();
         }
         return fallback;
     }

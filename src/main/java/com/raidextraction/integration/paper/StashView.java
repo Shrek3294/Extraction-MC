@@ -26,7 +26,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Simple chest-style GUI for browsing and withdrawing stash contents.
+ * Simple chest-style GUI for browsing stash contents. Click items in the stash to withdraw;
+ * shift-click items from your inventory to deposit into the stash.
  */
 public final class StashView implements Listener {
     private static final int INVENTORY_SIZE = 54;
@@ -66,7 +67,8 @@ public final class StashView implements Listener {
                     return;
                 }
                 Inventory inventory = plugin.getServer().createInventory(player, INVENTORY_SIZE, INVENTORY_TITLE);
-                StashSession session = new StashSession(playerId, inventory, new ArrayList<>(loaded));
+                StashSession session = new StashSession(playerId, inventory, new ArrayList<>(loaded),
+                        stashService.capacity(playerId));
                 sessions.put(playerId, session);
                 render(session);
                 player.openInventory(inventory);
@@ -88,9 +90,26 @@ public final class StashView implements Listener {
         }
 
         boolean topClick = event.getClickedInventory().equals(session.inventory());
-        boolean shiftFromBottom = event.isShiftClick() && event.getClickedInventory().equals(event.getView().getBottomInventory());
+        boolean shiftFromBottom = event.isShiftClick()
+                && event.getClickedInventory().equals(event.getView().getBottomInventory());
         if (topClick || shiftFromBottom) {
             event.setCancelled(true);
+        }
+        if (shiftFromBottom) {
+            if (session.busy()) {
+                player.sendMessage("Stash is syncing; please wait a moment.");
+                return;
+            }
+            ItemStack current = event.getCurrentItem();
+            if (current == null || current.getType().isAir() || current.getAmount() <= 0) {
+                return;
+            }
+            session.busy(true);
+            ItemStack toDeposit = current.clone();
+            event.setCurrentItem(null);
+            player.updateInventory();
+            deposit(player, session, toDeposit);
+            return;
         }
         if (!topClick) {
             return;
@@ -177,7 +196,8 @@ public final class StashView implements Listener {
         boolean hasPrev = session.page() > 0;
         boolean hasNext = end < session.items().size();
         inventory.setItem(PREV_SLOT, navigationItem(Material.ARROW, hasPrev ? "Previous" : "First page"));
-        inventory.setItem(INFO_SLOT, infoItem(session.page(), Math.max((session.items().size() - 1) / PAGE_SIZE, 0), session.items().size()));
+        inventory.setItem(INFO_SLOT, infoItem(session.page(), Math.max((session.items().size() - 1) / PAGE_SIZE, 0),
+                session.items().size(), session.capacity()));
         inventory.setItem(NEXT_SLOT, navigationItem(Material.ARROW, hasNext ? "Next" : "Last page"));
     }
 
@@ -191,14 +211,83 @@ public final class StashView implements Listener {
         return item;
     }
 
-    private ItemStack infoItem(int page, int maxPage, int totalItems) {
+    private ItemStack infoItem(int page, int maxPage, int totalItems, int capacity) {
         ItemStack item = new ItemStack(Material.BOOK);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName("Page " + (page + 1) + "/" + (maxPage + 1) + " • " + totalItems + " item(s)");
+            meta.setDisplayName("Page " + (page + 1) + "/" + (maxPage + 1) + " • " + totalItems + "/"
+                    + Math.max(0, capacity) + " stack(s)");
             item.setItemMeta(meta);
         }
         return item;
+    }
+
+    private void deposit(Player player, StashSession session, ItemStack stack) {
+        UUID playerId = player.getUniqueId();
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            StashService.AppendResult result = null;
+            Exception error = null;
+            try {
+                ItemData itemData = itemDataMapper.toItemData(stack);
+                result = stashService.addItems(playerId, List.of(itemData));
+            } catch (Exception thrown) {
+                error = thrown;
+            }
+            StashService.AppendResult finalResult = result;
+            Exception finalError = error;
+            plugin.getServer().getScheduler().runTask(plugin,
+                    () -> handleDepositResult(playerId, session, stack, finalResult, finalError));
+        });
+    }
+
+    private void handleDepositResult(UUID playerId,
+            StashSession session,
+            ItemStack depositedStack,
+            StashService.AppendResult result,
+            Exception error) {
+        try {
+            Player player = plugin.getServer().getPlayer(playerId);
+            if (player == null || !player.isOnline()) {
+                restoreItemAsync(playerId, itemDataMapper.toItemData(depositedStack));
+                return;
+            }
+
+            if (error != null || result == null) {
+                logger.log(Level.WARNING, "Failed to deposit stash item for " + playerId, error);
+                restoreToInventory(player, depositedStack);
+                player.sendMessage("Could not deposit that item to your stash. Try again shortly.");
+                return;
+            }
+
+            StashSession current = sessions.get(playerId);
+            if (current != null && current == session) {
+                session.items(new ArrayList<>(result.stash()));
+                session.capacity(result.capacity());
+                int maxPage = Math.max((session.items().size() - 1) / PAGE_SIZE, 0);
+                if (session.page() > maxPage) {
+                    session.page(maxPage);
+                }
+                render(session);
+            }
+
+            if (result.added().isEmpty()) {
+                restoreToInventory(player, depositedStack);
+                player.sendMessage("Your stash is full (" + result.stash().size() + "/" + result.capacity()
+                        + "). Deposit blocked.");
+                return;
+            }
+
+            player.sendMessage("Deposited " + depositedStack.getAmount() + "x " + depositedStack.getType().name()
+                    + " to your stash.");
+        } finally {
+            session.busy(false);
+        }
+    }
+
+    private void restoreToInventory(Player player, ItemStack stack) {
+        Map<Integer, ItemStack> leftovers = player.getInventory().addItem(stack);
+        leftovers.values().forEach(leftover -> player.getWorld().dropItemNaturally(player.getLocation(), leftover));
+        player.updateInventory();
     }
 
     private void withdraw(Player player, StashSession session, ItemData itemData) {
@@ -266,7 +355,7 @@ public final class StashView implements Listener {
     private void restoreItemAsync(UUID playerId, ItemData itemData) {
         plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
-                stashService.addItem(playerId, itemData);
+                stashService.forceAddItems(playerId, List.of(itemData));
             } catch (Exception error) {
                 logger.log(Level.WARNING, "Failed to restore stash item for offline player " + playerId, error);
             }
@@ -279,13 +368,15 @@ public final class StashView implements Listener {
         private List<ItemData> items;
         private int page;
         private boolean busy;
+        private int capacity;
 
-        private StashSession(UUID playerId, Inventory inventory, List<ItemData> items) {
+        private StashSession(UUID playerId, Inventory inventory, List<ItemData> items, int capacity) {
             this.playerId = playerId;
             this.inventory = inventory;
             this.items = items;
             this.page = 0;
             this.busy = false;
+            this.capacity = capacity;
         }
 
         private UUID playerId() {
@@ -318,6 +409,14 @@ public final class StashView implements Listener {
 
         private void busy(boolean busy) {
             this.busy = busy;
+        }
+
+        private int capacity() {
+            return capacity;
+        }
+
+        private void capacity(int capacity) {
+            this.capacity = capacity;
         }
     }
 }

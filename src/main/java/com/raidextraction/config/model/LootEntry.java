@@ -3,6 +3,8 @@ package com.raidextraction.config.model;
 public record LootEntry(
         String id,
         String material,
+        String category,
+        long credits,
         int weight,
         int minAmount,
         int maxAmount

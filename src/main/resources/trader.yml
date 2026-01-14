@@ -1,0 +1,24 @@
+# Optional lobby trader config. The trader provides a basic credits loop:
+# sell loot for credits and buy starter kits.
+trader:
+  enabled: false
+
+  # If enabled, the plugin will spawn or re-use a persistent Villager NPC at the lobby spawn.
+  npc:
+    spawn_at_lobby: true
+    name: "Trader"
+    uuid: "" # managed by the plugin when spawn_at_lobby is enabled
+
+  # Categories that the "Sell" button will accept.
+  sell_categories: [junk, rare]
+
+  # Kits that can be purchased.
+  kits:
+    starter:
+      price: 50
+      items:
+        - material: BREAD
+          amount: 6
+        - material: STONE_SWORD
+          amount: 1
+

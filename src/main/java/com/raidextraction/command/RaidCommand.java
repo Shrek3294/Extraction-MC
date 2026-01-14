@@ -5,6 +5,7 @@ import com.raidextraction.integration.RaidLifecycleCoordinator;
 import com.raidextraction.raid.QueueManager;
 import com.raidextraction.raid.RaidInstance;
 import com.raidextraction.raid.RaidManager;
+import com.raidextraction.ux.HudService;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -22,15 +23,18 @@ public final class RaidCommand implements CommandExecutor {
     private final QueueManager queueManager;
     private final RaidLifecycleCoordinator raidLifecycleCoordinator;
     private final ExtractionService extractionService;
+    private final HudService hudService;
 
     public RaidCommand(RaidManager raidManager,
                        QueueManager queueManager,
                        RaidLifecycleCoordinator raidLifecycleCoordinator,
-                       ExtractionService extractionService) {
+                       ExtractionService extractionService,
+                       HudService hudService) {
         this.raidManager = Objects.requireNonNull(raidManager, "raidManager");
         this.queueManager = Objects.requireNonNull(queueManager, "queueManager");
         this.raidLifecycleCoordinator = Objects.requireNonNull(raidLifecycleCoordinator, "raidLifecycleCoordinator");
         this.extractionService = Objects.requireNonNull(extractionService, "extractionService");
+        this.hudService = Objects.requireNonNull(hudService, "hudService");
     }
 
     @Override
@@ -40,7 +44,7 @@ public final class RaidCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /raid <join|leave|status> [raidId]");
+            sender.sendMessage("Usage: /raid <join|leave|status|hud> [raidId]");
             return true;
         }
         String action = args[0].toLowerCase();
@@ -56,11 +60,17 @@ public final class RaidCommand implements CommandExecutor {
             case "join" -> handleJoin(sender, playerId, args);
             case "leave" -> handleLeave(sender, playerId);
             case "status" -> handleStatus(sender, playerId);
+            case "hud" -> handleHud(player);
             default -> {
-                sender.sendMessage("Unknown subcommand. Use /raid <join|leave|status>.");
+                sender.sendMessage("Unknown subcommand. Use /raid <join|leave|status|hud>.");
                 yield true;
             }
         };
+    }
+
+    private boolean handleHud(Player player) {
+        hudService.toggleFor(player);
+        return true;
     }
 
     private boolean handleJoin(CommandSender sender, UUID playerId, String[] args) {
