@@ -64,9 +64,9 @@ jobs:
           rm -f "$merge_dir/META-INF/MANIFEST.MF" "$merge_dir/META-INF/"*.SF "$merge_dir/META-INF/"*.RSA "$merge_dir/META-INF/"*.DSA || true
           manifest="$tmp/MANIFEST.MF"
           cat > "$manifest" <<'EOF'
-Manifest-Version: 1.0
-Main-Class: org.gradle.wrapper.GradleWrapperMain
-EOF
+          Manifest-Version: 1.0
+          Main-Class: org.gradle.wrapper.GradleWrapperMain
+          EOF
 
           mkdir -p gradle/wrapper
           jar cfm gradle/wrapper/gradle-wrapper.jar "$manifest" -C "$merge_dir" .
