@@ -34,7 +34,7 @@ If you want to help but don’t know where to start, see [HELP_WANTED.md](HELP_W
    - `loot_tables.yml` and `items.yml` for loot configuration.
 4. Start the server and use `/raid join <raidId>` to queue.
 
-> Note: The Gradle wrapper JAR is intentionally not committed. If building locally, run `./scripts/fetch-gradle-wrapper.sh` or supply `gradle/wrapper/gradle-wrapper.jar` locally (keep it untracked).
+> Note: Download plugin jars from **GitHub Releases** rather than committed artifacts; the repo should not contain built plugin jars.
 
 ## Commands & Permissions
 
@@ -58,6 +58,10 @@ See [docs/playtesting.md](docs/playtesting.md) for scenarios, log capture, and r
 ## Roadmap
 
 Short-term priorities focus on polishing the raid loop (queue → raid → loot → extract → stash), improving loot feel, and expanding map content. See [TODO.md](TODO.md) for the full roadmap and [TODO-completed.md](TODO-completed.md) for completed milestones.
+
+## Before Posting Checklist
+
+Before posting publicly (Discord/forums/Reddit), review the release, demo, and traction checklists in [TODO.md](TODO.md).
 
 ## License
 
