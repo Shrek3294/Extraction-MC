@@ -15,7 +15,6 @@ bin/
 .DS_Store
 Thumbs.db
 /run/
-gradle/wrapper/gradle-wrapper.jar
 server/
 resourcepack/*.zip
 resourcepack/**/optifine/
