@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v0.1.0). Leave blank to use the ref that triggered the workflow."
+        required: false
+        type: string
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.tag || github.ref_name }}
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Fetch Gradle wrapper jar
+        run: bash ./scripts/fetch-gradle-wrapper.sh
+
+      - name: Build and test
+        run: bash ./gradlew clean build --no-daemon --console=plain
+
+      - name: Prepare release assets
+        shell: bash
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          jar="$(ls -1 build/libs/*.jar | head -n 1)"
+          out="dist/RaidExtraction-${TAG}.jar"
+          cp "$jar" "$out"
+          (cd dist && sha256sum "$(basename "$out")" > SHA256SUMS.txt)
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          generate_release_notes: true
+          files: |
+            dist/*.jar
+            dist/SHA256SUMS.txt

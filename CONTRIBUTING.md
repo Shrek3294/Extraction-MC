@@ -22,8 +22,13 @@ If you want a starter task, check [HELP_WANTED.md](HELP_WANTED.md).
 ### Build
 
 ```bash
+# macOS/Linux
 ./scripts/fetch-gradle-wrapper.sh
 ./gradlew clean build
+#
+# Windows (PowerShell)
+.\scripts\fetch-gradle-wrapper.ps1
+.\gradlew.bat clean build
 ```
 
 > Note: In this environment, Gradle wrapper invocations can fail due to a blocked distribution download. See `AGENTS.md` for details.
@@ -48,7 +53,7 @@ If you want a starter task, check [HELP_WANTED.md](HELP_WANTED.md).
 
 ## Branching & PR Rules
 
-- **Branch base:** use `Cloud` (authoritative) or `main-cleanup` for staging; avoid the legacy `main` branch.
+- **Branch base:** use `main-cleanup` (source of truth); avoid legacy branches (including the deprecated `Cloud` and any legacy `main`).
 - **One PR per topic:** keep changes focused.
 - **Commit style:** conventional commit-ish prefixes are preferred (`feat:`, `fix:`, `docs:`, `chore:`).
 - **Docs required:** if behavior changes, update the relevant docs.

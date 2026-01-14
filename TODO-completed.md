@@ -1,11 +1,11 @@
 # TODO Roadmap
 
-This TODO tracks the cloud-safe implementation path for the Raid Extraction Paper plugin. Tasks are organized so `./gradlew clean build` should remain green without requiring a running Paper server.
+This TODO tracks the local-first implementation path for the Raid Extraction Paper plugin. Tasks are organized so `./gradlew clean build` should remain green without requiring a running Paper server.
 
-- Trunk status: `Cloud`/`main-cleanup` contain the live plugin code; `main` remains as a legacy scaffold for history only.
+- Trunk status: `main-cleanup` contains the live plugin code; `Cloud` and legacy `main` are deprecated.
 
-## Phase Mapping — Cloud-Safe vs Integration
-- [ ] Cloud-safe phases: 0–8 (no Paper server required).
+## Phase Mapping — Core vs Integration
+- [ ] Core phases: 0–8 (no Paper server required).
 - [ ] Integration-only work: the Local Development Checklist and any `TODO(INTEGRATION)` items.
 
 ## Environment / Test Warnings
@@ -42,7 +42,7 @@ This TODO tracks the cloud-safe implementation path for the Raid Extraction Pape
 - [x] Provide skeleton commands (`RaidCommand`, `StashCommand`, admin) and listener stubs that delegate to managers.
 
 ## Phase 7 — Documentation & Integration Checklist
-- [x] Expand README with local Paper testing steps, integration hooks (teleport, inventory snapshot, region checks, GUI stash, chest filling), and cloud/local notes.
+- [x] Expand README with local Paper testing steps, integration hooks (teleport, inventory snapshot, region checks, GUI stash, chest filling), and local notes.
 - [x] Keep TODOs tagged (`TODO(V1)`, `TODO(INTEGRATION)`, `TODO(V2)`) and update this roadmap as features land.
 
 ## Phase 8 — Build/Release Automation
@@ -55,7 +55,7 @@ This TODO tracks the cloud-safe implementation path for the Raid Extraction Pape
 - [x] `TODO(INTEGRATION)` Add a `/server/` gitignored local harness and a Gradle copy task for a one-command loop.
 
 ## Local Development Checklist (Paper Integration)
-Use this checklist once a local Paper server is available. The cloud phase is complete; remaining work depends on Bukkit/Paper APIs.
+Use this checklist once a local Paper server is available. The core phase is complete; remaining work depends on Bukkit/Paper APIs.
 
 ### Server Setup
 - [ ] Install Paper 1.21.x and Java 21 locally.

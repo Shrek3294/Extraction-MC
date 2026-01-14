@@ -1,7 +1,7 @@
 ## Summary
 
 - Describe the change and how it impacts the raid loop (queue → raid → loot → extract → stash).
-- Note any cloud-safe vs local Paper considerations.
+- Note any local Paper/manual testing considerations (server harness, commands, expected results).
 
 ## Testing
 

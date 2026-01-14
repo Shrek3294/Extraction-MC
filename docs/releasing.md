@@ -3,9 +3,12 @@
 This document outlines the manual release workflow for the plugin.
 
 ## Preconditions
-- Clean working tree on the target branch (`Cloud` or `main-cleanup`).
+- Clean working tree on the target branch (`main-cleanup`).
 - Java 21 installed (or auto-download enabled).
-- Gradle wrapper JAR present (run `./scripts/fetch-gradle-wrapper.sh` or place `gradle/wrapper/gradle-wrapper.jar` locally).
+- Gradle wrapper JAR present:
+  - macOS/Linux: run `./scripts/fetch-gradle-wrapper.sh`
+  - Windows (PowerShell): run `.\scripts\fetch-gradle-wrapper.ps1`
+  - Or place `gradle/wrapper/gradle-wrapper.jar` locally (do not commit it).
 
 ## Version bump
 1. Update the version in `src/main/resources/plugin.yml`.

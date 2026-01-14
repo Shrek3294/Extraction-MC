@@ -1,22 +1,24 @@
 # TODO
 
 ## Release + Build Hygiene (MUST DO BEFORE PROMOTION)
-- [ ] Fix `.gitignore` to allow `gradle/wrapper/gradle-wrapper.jar` while still ignoring build outputs and plugin jars.
-  - [ ] Keep `*.jar` ignored.
-  - [ ] Add exception `!gradle/wrapper/gradle-wrapper.jar`.
-  - [ ] Remove any line that ignores `gradle/wrapper/gradle-wrapper.jar`.
-  - **Acceptance:** a new contributor can clone and run `./gradlew clean build` without committing build outputs or plugin jars.
-- [ ] Ensure Gradle wrapper files are committed: `gradlew`, `gradlew.bat`, `gradle/wrapper/gradle-wrapper.properties`, `gradle/wrapper/gradle-wrapper.jar`.
-  - **Acceptance:** wrapper works after clone on a clean machine.
-- [ ] If binaries cannot be committed in PRs, document the wrapper JAR fetch step (script or release artifact) and keep it untracked.
-  - **Acceptance:** contributors can obtain `gradle/wrapper/gradle-wrapper.jar` without committing binaries.
-- [ ] Add/verify GitHub Actions CI for `./gradlew clean build` on push/PR.
+- [x] Keep binaries out of git (`*.jar`, `server/`, `gradle/wrapper/gradle-wrapper.jar`).
+  - **Acceptance:** `git ls-files gradle/wrapper/gradle-wrapper.jar` is empty; plugin JARs come from CI/Releases only.
+- [x] Provide wrapper JAR fetch helper (`./scripts/fetch-gradle-wrapper.sh`) and document it.
+  - **Acceptance:** fresh clone can run `./scripts/fetch-gradle-wrapper.sh` then `./gradlew clean build`.
+- [x] Add Windows wrapper-JAR fetch option (`./scripts/fetch-gradle-wrapper.ps1`) or document Git Bash requirement.
+  - **Acceptance:** Windows user can fetch `gradle/wrapper/gradle-wrapper.jar` without WSL/Git Bash.
+- [x] Ensure Gradle wrapper text files are committed: `gradlew`, `gradlew.bat`, `gradle/wrapper/gradle-wrapper.properties`.
+  - **Acceptance:** wrapper scripts exist after clone on a clean machine.
+- [x] GitHub Actions CI runs `./gradlew clean build` on push/PR.
   - **Acceptance:** CI runs for every push/PR and reports build status.
-- [ ] Create first GitHub Release workflow.
+- [x] Document manual releasing in `docs/releasing.md` (bump, build, smoke test, tag, upload).
+- [x] Add GitHub Release workflow (builds from tag and uploads artifacts).
   - [ ] Tag `v0.1.0`.
-  - [ ] Attach built plugin JAR from CI artifacts (do not commit JARs).
-  - [ ] Provide a release notes template.
+  - [x] Attach built plugin JAR from CI artifacts (do not commit JARs).
+  - [x] Provide a release notes template (`.github/release.yml` or `docs/release-notes-template.md`).
   - **Acceptance:** release is reproducible from CI and download links are from GitHub Releases.
+- [ ] Versioning hygiene: single source of truth for version (Gradle or tag) and inject into `plugin.yml` at build time.
+  - **Acceptance:** jar name + `plugin.yml` version match the release tag.
 
 ## Demo Distribution Plan (LOW FRICTION PLAYTESTING)
 **Option A: Separate demo repo (recommended)**
@@ -75,7 +77,10 @@
   - **Where:** README + docs.
 
 ## Build/CI Follow-ups
-- [ ] (Owner=BuildRelease, Scope=V2.0) Command `./gradlew clean build` failed: plugin `org.gradle.toolchains.foojay-resolver-convention:0.9.0` could not be resolved from Gradle Plugin Portal in this environment. Next action: retry in an environment with plugin portal access or preconfigure plugin resolution mirrors for offline builds.
+- [ ] (Owner=BuildRelease, Scope=V2.0) Command `./gradlew clean build` fails in restricted/proxied environments:
+  - Gradle distribution download can return HTTP 403 (wrapper cannot bootstrap).
+  - Plugin `org.gradle.toolchains.foojay-resolver-convention:0.9.0` may fail to resolve from Gradle Plugin Portal.
+  - **Next action:** retry in an environment with access, or document/implement offline-friendly options (pre-downloaded distribution zip, internal mirrors, or removing the plugin if unnecessary).
 
 1. V2.0: Repo / Local Harness / Release Hygiene
    - [x] (Owner=BuildRelease, Scope=V2.0) Add GitHub Actions CI: `./gradlew clean build` (cache Gradle). DoD: CI passes on push + PR; failures block merges.
