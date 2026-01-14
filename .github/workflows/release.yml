@@ -43,10 +43,36 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          jar="$(ls -1 build/libs/*.jar | head -n 1)"
-          out="dist/RaidExtraction-${TAG}.jar"
+          jar="$(ls -1 build/libs/*.jar | grep -Ev '(-sources|-javadoc)\\.jar$' | head -n 1)"
+          out="dist/raid-extraction.jar"
           cp "$jar" "$out"
           (cd dist && sha256sum "$(basename "$out")" > SHA256SUMS.txt)
+
+      - name: Remove existing release assets (reruns)
+        uses: actions/github-script@v7
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
+        with:
+          script: |
+            const tag = process.env.TAG;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            try {
+              const { data: release } = await github.rest.repos.getReleaseByTag({ owner, repo, tag });
+              const deleteNames = new Set(["raid-extraction.jar", "SHA256SUMS.txt"]);
+              for (const asset of release.assets || []) {
+                if (!deleteNames.has(asset.name)) continue;
+                core.info(`Deleting existing asset: ${asset.name}`);
+                await github.rest.repos.deleteReleaseAsset({ owner, repo, asset_id: asset.id });
+              }
+            } catch (err) {
+              if (err && err.status === 404) {
+                core.info(`No existing release for tag ${tag}; continuing.`);
+                return;
+              }
+              throw err;
+            }
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
