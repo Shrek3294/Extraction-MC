@@ -1,24 +1,5 @@
 # TODO
 
-## Release + Build Hygiene (MUST DO BEFORE PROMOTION)
-- [x] Keep binaries out of git (`*.jar`, `server/`, `gradle/wrapper/gradle-wrapper.jar`).
-  - **Acceptance:** `git ls-files gradle/wrapper/gradle-wrapper.jar` is empty; plugin JARs come from CI/Releases only.
-- [x] Provide wrapper JAR fetch helper (`./scripts/fetch-gradle-wrapper.sh`) and document it.
-  - **Acceptance:** fresh clone can run `./scripts/fetch-gradle-wrapper.sh` then `./gradlew clean build`.
-- [x] Add Windows wrapper-JAR fetch option (`./scripts/fetch-gradle-wrapper.ps1`) or document Git Bash requirement.
-  - **Acceptance:** Windows user can fetch `gradle/wrapper/gradle-wrapper.jar` without WSL/Git Bash.
-- [x] Ensure Gradle wrapper text files are committed: `gradlew`, `gradlew.bat`, `gradle/wrapper/gradle-wrapper.properties`.
-  - **Acceptance:** wrapper scripts exist after clone on a clean machine.
-- [x] GitHub Actions CI runs `./gradlew clean build` on push/PR.
-  - **Acceptance:** CI runs for every push/PR and reports build status.
-- [x] Document manual releasing in `docs/releasing.md` (bump, build, smoke test, tag, upload).
-- [x] Add GitHub Release workflow (builds from tag and uploads artifacts).
-  - [ ] Tag `v0.1.0`.
-  - [x] Attach built plugin JAR from CI artifacts (do not commit JARs).
-  - [x] Provide a release notes template (`.github/release.yml` or `docs/release-notes-template.md`).
-  - **Acceptance:** release is reproducible from CI and download links are from GitHub Releases.
-- [ ] Versioning hygiene: single source of truth for version (Gradle or tag) and inject into `plugin.yml` at build time.
-  - **Acceptance:** jar name + `plugin.yml` version match the release tag.
 
 ## Demo Distribution Plan (LOW FRICTION PLAYTESTING)
 **Option A: Separate demo repo (recommended)**
@@ -36,7 +17,7 @@
 **Option C: Release asset "demo server zip"**
 - **Includes:** minimal server folder skeleton, demo configs, README, plugin JAR from the release build.
 - **Excludes:** secrets, tokens, player data, Mojang-proprietary assets, server binaries.
-- **Tasks:** zip build step in release workflow, preconfigured configs, download/run instructions.
+- **Tasks:** manual zip packaging step (or a local script), preconfigured configs, download/run instructions.
 - **Acceptance:** a playtester can start the server and join the lobby within 5 minutes.
 
 ## Traction Plan (POSTING + COMMUNITY)
@@ -50,31 +31,6 @@
   - Posting frequency: once per 28 days.
 - **Acceptance:** at least 1–2 playtest reports or issue comments from external users.
 
-## Contributor-Friendly Tasks
-- [ ] UI polish: boss bar timers, titles/subtitles, action bar feedback.  
-  - **Acceptance:** clear feedback in raid start/end and extraction states.  
-  - **Where:** UI services + listener feedback hooks.
-- [ ] Better logging and debug toggles.  
-  - **Acceptance:** toggleable verbose logs for raid lifecycle and loot.  
-  - **Where:** logger helpers and config flags.
-- [ ] Config validation with clear error messages.  
-  - **Acceptance:** missing/invalid config keys produce actionable startup warnings.  
-  - **Where:** config loader + validation utilities.
-- [ ] Map builder documentation + raid region checklist.  
-  - **Acceptance:** step-by-step doc for `/raidadmin edit` and validation.  
-  - **Where:** docs + README updates.
-- [ ] Balance/loot tuning framework.  
-  - **Acceptance:** loot table adjustments documented with examples.  
-  - **Where:** `loot_tables.yml` docs + loot manager guidance.
-- [ ] Example configs and sample raid pack.  
-  - **Acceptance:** a new admin can import sample configs and launch a raid.  
-  - **Where:** docs + sample config folder.
-- [ ] QA checklist for extraction edge cases.  
-  - **Acceptance:** repeatable manual test list with expected outputs.  
-  - **Where:** docs + TODO QA section.
-- [ ] Paper server setup notes for contributors.  
-  - **Acceptance:** quick-start instructions with required Java version.  
-  - **Where:** README + docs.
 
 ## Build/CI Follow-ups
 - [ ] (Owner=BuildRelease, Scope=V2.0) Command `./gradlew clean build` fails in restricted/proxied environments:
@@ -83,7 +39,7 @@
   - **Next action:** retry in an environment with access, or document/implement offline-friendly options (pre-downloaded distribution zip, internal mirrors, or removing the plugin if unnecessary).
 
 1. V2.0: Repo / Local Harness / Release Hygiene
-   - [x] (Owner=BuildRelease, Scope=V2.0) Add GitHub Actions CI: `./gradlew clean build` (cache Gradle). DoD: CI passes on push + PR; failures block merges.
+   - [ ] (Owner=BuildRelease, Scope=V2.0) (Optional) Add CI to run `./gradlew clean build` on push/PR. DoD: CI passes on push + PR; failures are visible.
    - [x] (Owner=BuildRelease, Scope=V2.0) Add `docs/releasing.md` and version bump instructions. DoD: checklist covers bump + build + smoke test + tag.
    - [x] (Owner=DevEx, Scope=V2.0) Document `/server/` local harness + copy task for Windows. DoD: one command builds and copies plugin jar into `/server/plugins/`.
 

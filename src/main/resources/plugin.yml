@@ -1,6 +1,6 @@
 name: RaidExtraction
 main: com.raidextraction.RaidExtractionPlugin
-version: 0.0.1-SNAPSHOT
+version: 0.1.0
 description: Data-driven Paper plugin providing a raid-to-extraction gameplay loop.
 api-version: "1.21"
 commands:

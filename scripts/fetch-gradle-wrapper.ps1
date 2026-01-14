@@ -49,15 +49,25 @@ try {
       $zip.Entries |
       Where-Object { $_.FullName -match 'gradle-wrapper-shared-[^/]*\.jar$' } |
       Select-Object -First 1
+    $cliEntry =
+      $zip.Entries |
+      Where-Object { $_.FullName -match '(^|/)gradle-cli-[^/]*\.jar$' } |
+      Select-Object -First 1
+    $filesEntry =
+      $zip.Entries |
+      Where-Object { $_.FullName -match '(^|/)gradle-files-[^/]*\.jar$' } |
+      Select-Object -First 1
 
-    if (-not $mainEntry -or -not $sharedEntry) {
+    if (-not $mainEntry -or -not $sharedEntry -or -not $cliEntry -or -not $filesEntry) {
       throw "Gradle wrapper jars not found in distribution archive"
     }
 
     $mainJar = Join-Path $tempDir "wrapper-main.jar"
     $sharedJar = Join-Path $tempDir "wrapper-shared.jar"
+    $cliJar = Join-Path $tempDir "gradle-cli.jar"
+    $filesJar = Join-Path $tempDir "gradle-files.jar"
 
-    foreach ($pair in @(@($mainEntry, $mainJar), @($sharedEntry, $sharedJar))) {
+    foreach ($pair in @(@($mainEntry, $mainJar), @($sharedEntry, $sharedJar), @($cliEntry, $cliJar), @($filesEntry, $filesJar))) {
       $entry = $pair[0]
       $outFile = $pair[1]
       $s = $entry.Open()
@@ -104,6 +114,8 @@ try {
 
       Copy-JarEntries $mainJar
       Copy-JarEntries $sharedJar
+      Copy-JarEntries $cliJar
+      Copy-JarEntries $filesJar
 
       $manifestText = "Manifest-Version: 1.0`r`nMain-Class: org.gradle.wrapper.GradleWrapperMain`r`n"
       $mfEntry = $outZip.CreateEntry("META-INF/MANIFEST.MF", [System.IO.Compression.CompressionLevel]::Optimal)

@@ -11,7 +11,8 @@ This document outlines the manual release workflow for the plugin.
   - Or place `gradle/wrapper/gradle-wrapper.jar` locally (do not commit it).
 
 ## Version bump
-1. Update the version in `src/main/resources/plugin.yml`.
+1. Update the version in `gradle.properties` (`version=X.Y.Z`) so the jar name becomes `raid-extraction-X.Y.Z.jar`.
+2. Update the version in `src/main/resources/plugin.yml`.
 2. If you keep a changelog elsewhere, update it now.
 
 ## Build

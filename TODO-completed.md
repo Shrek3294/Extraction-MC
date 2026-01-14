@@ -46,7 +46,7 @@ This TODO tracks the local-first implementation path for the Raid Extraction Pap
 - [x] Keep TODOs tagged (`TODO(V1)`, `TODO(INTEGRATION)`, `TODO(V2)`) and update this roadmap as features land.
 
 ## Phase 8 — Build/Release Automation
-- [ ] `TODO(V1)` Add GitHub Actions CI to run `./gradlew clean build` on push/PR with Gradle caching.
+- [ ] `TODO(V1)` (Optional) Add CI to run `./gradlew clean build` on push/PR.
 - [ ] `TODO(V1)` Add a Gradle release task that outputs to `build/libs/` with a predictable name (append version if helpful).
 - [ ] `TODO(V1)` Add a release checklist in `docs/releasing.md` (bump version → build → smoke test → tag).
 

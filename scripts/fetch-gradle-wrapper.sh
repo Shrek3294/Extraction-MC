@@ -40,18 +40,24 @@ curl -sSL "$DISTRIBUTION_URL" -o "$ARCHIVE"
 # (Main-Class: org.gradle.wrapper.GradleWrapperMain), so we merge the two jars into gradle/wrapper/gradle-wrapper.jar.
 MAIN_PATH=$(unzip -Z1 "$ARCHIVE" | grep -E 'gradle-wrapper-main-[^/]*\.jar$' | head -n 1)
 SHARED_PATH=$(unzip -Z1 "$ARCHIVE" | grep -E 'gradle-wrapper-shared-[^/]*\.jar$' | head -n 1)
-if [[ -z "$MAIN_PATH" || -z "$SHARED_PATH" ]]; then
+CLI_PATH=$(unzip -Z1 "$ARCHIVE" | grep -E '(^|/)gradle-cli-[^/]*\.jar$' | head -n 1)
+FILES_PATH=$(unzip -Z1 "$ARCHIVE" | grep -E '(^|/)gradle-files-[^/]*\.jar$' | head -n 1)
+if [[ -z "$MAIN_PATH" || -z "$SHARED_PATH" || -z "$CLI_PATH" || -z "$FILES_PATH" ]]; then
   echo "Gradle wrapper jars not found in distribution archive" >&2
   exit 1
 fi
 
 unzip -p "$ARCHIVE" "$MAIN_PATH" > "$WORKDIR/wrapper-main.jar"
 unzip -p "$ARCHIVE" "$SHARED_PATH" > "$WORKDIR/wrapper-shared.jar"
+unzip -p "$ARCHIVE" "$CLI_PATH" > "$WORKDIR/gradle-cli.jar"
+unzip -p "$ARCHIVE" "$FILES_PATH" > "$WORKDIR/gradle-files.jar"
 
 MERGE_DIR="$WORKDIR/merged"
 mkdir -p "$MERGE_DIR"
 unzip -q "$WORKDIR/wrapper-main.jar" -d "$MERGE_DIR"
 unzip -q "$WORKDIR/wrapper-shared.jar" -d "$MERGE_DIR"
+unzip -q "$WORKDIR/gradle-cli.jar" -d "$MERGE_DIR"
+unzip -q "$WORKDIR/gradle-files.jar" -d "$MERGE_DIR"
 
 rm -f "$MERGE_DIR/META-INF/MANIFEST.MF" "$MERGE_DIR/META-INF/"*.SF "$MERGE_DIR/META-INF/"*.RSA "$MERGE_DIR/META-INF/"*.DSA || true
 mkdir -p "$MERGE_DIR/META-INF"
