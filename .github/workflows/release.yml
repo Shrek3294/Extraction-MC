@@ -30,8 +30,46 @@ jobs:
           java-version: "21"
           cache: gradle
 
-      - name: Fetch Gradle wrapper jar
-        run: bash ./scripts/fetch-gradle-wrapper.sh
+      - name: Bootstrap Gradle wrapper jar
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f gradle/wrapper/gradle-wrapper.jar ]]; then
+            echo "Wrapper jar already present"
+            exit 0
+          fi
+
+          url="$(grep '^distributionUrl=' gradle/wrapper/gradle-wrapper.properties | cut -d'=' -f2- | sed 's/\\\\:/:/g')"
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+
+          echo "Downloading Gradle distribution: $url"
+          curl -sSL "$url" -o "$tmp/gradle.zip"
+
+          main_path="$(unzip -Z1 "$tmp/gradle.zip" | grep -E 'gradle-wrapper-main-[^/]*\\.jar$' | head -n 1)"
+          shared_path="$(unzip -Z1 "$tmp/gradle.zip" | grep -E 'gradle-wrapper-shared-[^/]*\\.jar$' | head -n 1)"
+          if [[ -z "$main_path" || -z "$shared_path" ]]; then
+            echo "Gradle wrapper jars not found in distribution archive" >&2
+            exit 1
+          fi
+
+          unzip -p "$tmp/gradle.zip" "$main_path" > "$tmp/wrapper-main.jar"
+          unzip -p "$tmp/gradle.zip" "$shared_path" > "$tmp/wrapper-shared.jar"
+
+          merge_dir="$tmp/merged"
+          mkdir -p "$merge_dir"
+          unzip -q "$tmp/wrapper-main.jar" -d "$merge_dir"
+          unzip -q "$tmp/wrapper-shared.jar" -d "$merge_dir"
+
+          rm -f "$merge_dir/META-INF/MANIFEST.MF" "$merge_dir/META-INF/"*.SF "$merge_dir/META-INF/"*.RSA "$merge_dir/META-INF/"*.DSA || true
+          manifest="$tmp/MANIFEST.MF"
+          cat > "$manifest" <<'EOF'
+Manifest-Version: 1.0
+Main-Class: org.gradle.wrapper.GradleWrapperMain
+EOF
+
+          mkdir -p gradle/wrapper
+          jar cfm gradle/wrapper/gradle-wrapper.jar "$manifest" -C "$merge_dir" .
 
       - name: Build and test
         run: bash ./gradlew clean build --no-daemon --console=plain
