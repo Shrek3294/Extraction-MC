@@ -6,6 +6,7 @@ bin/
 *.tmp
 *.swp
 *.class
+**/*.class
 *.jar
 *.pid
 *.iml
@@ -17,6 +18,8 @@ Thumbs.db
 gradle/wrapper/gradle-wrapper.jar
 server/
 resourcepack/*.zip
+resourcepack/**/optifine/
+resourcepack/**/cit/
 .classpath
 .project
 .settings/
