@@ -1,6 +1,17 @@
-# Commands
+# Commands & Permissions
 
-This document lists the currently implemented commands and what they do.
+This document lists the currently implemented commands and permissions. See `src/main/resources/plugin.yml` and the command classes in `src/main/java/com/raidextraction/command/` for the authoritative source.
+
+> If you discover a mismatch, please file an issue and note the server + plugin versions.
+
+## Command Table (Quick Reference)
+
+| Command | Description | Permission |
+| --- | --- | --- |
+| `/raid` | Join/leave queues and check raid status. | `raid.user` |
+| `/stash` | Open your stash UI. | `raid.user` |
+| `/weapon` | Weapon guide, bench, apply mods, admin gives, spell debug. | `raid.user` / `raid.admin` |
+| `/raidadmin` | Admin raid controls and map editor tools. | `raid.admin` |
 
 ## Player Commands
 
@@ -10,6 +21,8 @@ This document lists the currently implemented commands and what they do.
 - `/raid leave`: Leave your current raid queue.
 - `/raid status`: Show your raid status, active raids, and queue sizes.
 - `/raid hud`: Toggle the scoreboard HUD (server name, credits, level) for yourself.
+
+See `src/main/java/com/raidextraction/command/RaidCommand.java`.
 
 ### /stash
 
@@ -22,6 +35,22 @@ This document lists the currently implemented commands and what they do.
 When `trader.yml` is enabled, a lobby `Trader` NPC can be right-clicked to:
 - Sell configured loot categories for credits.
 - Buy a configured kit (default: `starter`).
+
+See `src/main/java/com/raidextraction/command/StashCommand.java`.
+
+### /weapon
+
+- `/weapon guide`: Get a guide book explaining weapons, rarities, mods, spells, and scrolls.
+- `/weapon give <itemId> [amount]`: Give yourself a configured weapon/mod/scroll from `items.yml`.
+- `/weapon give <player> <itemId> [amount]`: Give a player a configured weapon/mod/scroll from `items.yml`.
+- `/weapon apply`: Apply the mod/enchant scroll in your offhand to the weapon in your main hand.
+- `/weapon bench`: Open the weapon bench UI (also applies mods/enchant scrolls).
+- `/weapon debugspells <on|off|toggle|status>`: Toggle spell debug for yourself.
+- `/weapon debugspells <player> <on|off|toggle|status>`: Toggle spell debug for another player.
+
+See `src/main/java/com/raidextraction/command/WeaponCommand.java`.
+
+If another plugin owns `/weapon`, use `/raidextraction:weapon ...` or `/rexweapon ...`.
 
 ## Admin Commands
 
@@ -37,69 +66,19 @@ When `trader.yml` is enabled, a lobby `Trader` NPC can be right-clicked to:
 - `/raidadmin validate <raidId>`: Validate editor data (spawns, evac zones, loot containers).
 - `/raidadmin undo`: Remove the last saved loot marker for the active editor session.
 - `/raidadmin debugbounds`: Toggle bounds debug actionbar for the current player.
-- `/raidadmin lootchance <percent>`: Set the spawn chance for loot chests (default for new markers and update the targeted container).
+- `/raidadmin lootchance <percent>`: Set the spawn chance for loot containers (default for new markers and update the targeted container).
 - `/raidadmin lootpreview`: Toggle temporary chest placement at all saved loot locations in editor mode.
+- `/raidadmin setlobby`: Set lobby spawn to the caller's current location.
 
-### /weapon
+See `src/main/java/com/raidextraction/command/RaidAdminCommand.java`.
 
-- `/weapon guide`: Get a guide book explaining weapons, rarities, mods, spells, and scrolls.
-- `/weapon give <itemId> [amount]`: Give yourself a configured weapon/mod/scroll from `items.yml`.
-- `/weapon give <player> <itemId> [amount]`: Give a player a configured weapon/mod/scroll from `items.yml`.
-- `/weapon apply`: Apply the mod/enchant scroll in your offhand to the weapon in your main hand.
-- `/weapon bench`: Open the weapon bench UI (also applies mods/enchant scrolls).
+## Permissions
 
-If another plugin owns `/weapon`, use `/raidextraction:weapon ...` or `/rexweapon ...`.
+- `raid.user`: Allows participation in raids and stash access.
+- `raid.admin`: Allows administrative control over raids and extraction states.
 
-#### Weapon IDs (copy/paste)
+See `src/main/resources/plugin.yml`.
 
-Weapons:
-- `/weapon give <player> iron_dagger`
-- `/weapon give <player> soldiers_longsword`
-- `/weapon give <player> bone_cleaver`
-- `/weapon give <player> frostbite_blade`
-- `/weapon give <player> infernal_saber`
-- `/weapon give <player> stormpiercer_rapier`
-- `/weapon give <player> voidreaver`
-- `/weapon give <player> dragonfang_greatsword`
-- `/weapon give <player> celestial_glaive`
-- `/weapon give <player> chronos_blade`
-- `/weapon give <player> oblivion_scythe`
-- `/weapon give <player> aetherblade`
+## TBD / TODO Notes
 
-Core mods (unlock each weapon's spell; put weapon in main hand and core in offhand, then `/weapon apply` or use `/weapon bench`):
-- `venom_vial` (Iron Dagger)
-- `wind_rune` (Soldier's Longsword)
-- `splinter_core` (Bone Cleaver)
-- `cryo_core` (Frostbite Blade)
-- `blast_rune` (Infernal Saber)
-- `voltage_cell` (Stormpiercer Rapier)
-- `dark_core` (Voidreaver)
-- `inferno_catalyst` (Dragonfang Greatsword)
-- `astral_lens` (Celestial Glaive)
-- `temporal_core` (Chronos Blade)
-- `death_core` (Oblivion Scythe)
-- `prismatic_core` (Aetherblade)
-
-Other mods:
-- `/weapon give <player> serrated_edge`
-- `/weapon give <player> lightweight_grip`
-
-Enchant scrolls (apply like mods):
-- `/weapon give <player> scroll_backstab`
-- `/weapon give <player> scroll_bleed`
-- `/weapon give <player> scroll_momentum`
-- `/weapon give <player> scroll_grim_harvest`
-
-#### Spell casting
-
-- Weapons start with spells locked; install the matching core mod to unlock the spell.
-- Cast: right-click with the weapon in your main hand.
-- If you are aiming at an interactable block (chest/door/button/etc.), sneak-right-click to cast instead.
-- Mana UI: when holding a custom weapon, your XP bar becomes your mana bar (level = current mana, bar = %).
-- Cooldowns: when you cast, the held item's vanilla cooldown overlay shows when the spell is ready again.
-
-#### Spell debugging
-
-- `/weapon debugspells toggle`: Toggle per-player spell debug.
-- `/weapon debugspells <player> toggle`: Toggle for another player.
-- When enabled, you get a `[SpellDebug] ...` actionbar and the server console logs why a cast was blocked (spell locked, cooldown, cancelled event, etc.).
+- **TBD:** full command descriptions for future raid instance management and instancing controls. TODO: update once V2.2 instancing commands are implemented.
