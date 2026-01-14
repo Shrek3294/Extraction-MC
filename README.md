@@ -1,5 +1,19 @@
 # Raid Extraction (Paper) Plugin
+# Extraction-MC
 
+> Extraction-style raid & loot plugin for Paper Minecraft  
+> **Core gameplay is complete — we are actively looking for contributors and playtesters.**
+
+## 🚨 Help Wanted Right Now
+
+We are looking for:
+- 🎮 **Playtesters** – run raids, find bugs, give balance feedback
+- 🗺️ **Map Builders** – create raid arenas & extraction layouts
+- ⚖️ **Loot & Balance Designers** – tune loot tables & progression
+- 🎨 **UI / UX Polish** – menus, messages, boss bars, feedback
+- 🧠 **Java Contributors** – polish, refactors, edge cases
+
+👉 **No Java experience required for playtesting or map building.**
 A data-driven Paper plugin that delivers an extraction-style raid loop for Minecraft: queue players, deploy into a raid region, loot, survive PvE (and later PvP), and extract to keep rewards. Player stash data persists via SQLite so only extracted loot is saved.
 
 ## Branches & Trunk Migration
