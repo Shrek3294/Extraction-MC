@@ -1,6 +1,5 @@
 # TODO
 
-
 ## Demo Distribution Plan (LOW FRICTION PLAYTESTING)
 **Option A: Separate demo repo (recommended)**
 - **Includes:** minimal demo server config, prebuilt plugin from GitHub Releases, README with quick start.
@@ -21,15 +20,15 @@
 - **Acceptance:** a playtester can start the server and join the lobby within 5 minutes.
 
 ## Traction Plan (POSTING + COMMUNITY)
-- [ ] Create `v0.1.0` Release before posting anywhere.
-- [ ] Create 3 GitHub issues labeled: `good first issue`, `help wanted`, `playtesting`.
-- [ ] Star the repo.
-- [ ] Post targets: r/admincraft, PaperMC Discord, SpigotMC forums.
-- [ ] Admincraft compliance notes:
+- [X] Create `v0.1.0` Release before posting anywhere.
+- [X] Create 3 GitHub issues labeled: `good first issue`, `help wanted`, `playtesting`.
+- [X] Star the repo.
+- [X] Post targets: r/admincraft, PaperMC Discord, SpigotMC forums.
+- [X] Admincraft compliance notes:
   - Free, source-available, no monetization gating.
   - Avoid framing as "AI-built"; describe as "I've been building".
   - Posting frequency: once per 28 days.
-- **Acceptance:** at least 1–2 playtest reports or issue comments from external users.
+- [] Acceptance:** at least 1–2 playtest reports or issue comments from external users.
 
 
 ## Build/CI Follow-ups
@@ -156,3 +155,145 @@
 
 ## Logging Requirements
 - Keep log lines structured for: raid start/end, extraction start/cancel/success, stash commit success/failure, world clone/load/unload/delete.
+
+## COMPLETED WALKTHROUGHS
+
+### ✅ V3.1 — The Threat (Guard Spawns)
+**Completed:** Implemented guard spawn system for raids
+
+**Changes Made:**
+- **Map Editor Tools**
+  - New Tool: Guard Tool (NETHERITE_UPGRADE_SMITHING_TEMPLATE)
+  - Functionality: Left-click in Editor Mode to set a guard spawn point at your current location
+  - Persistence: Guard spawns are saved to locations.yml under the guards key
+
+- **AI & Raid Lifecycle**
+  - SimpleGuardManager: Handles the spawning and cleanup of raid guards
+  - Lifecycle Hook: Guards spawn automatically when a raid transitions to IN_RAID and are removed when the raid ends (success or failure)
+
+- **Custom AI Visuals (Vanilla-Compatible)**
+  - Implemented the "Item-on-Head" trick: Guards wear a CARVED_PUMPKIN (or any item) that can be overridden by your resource pack using CustomModelData
+  - Added comments in the code showing where to plug in your model IDs
+
+**How to Test:**
+1. Enter Editor Mode: `/raidadmin edit <raidId>`
+2. Use the Guard Tool to place a few spawns
+3. Save: `/raidadmin save`
+4. Join the raid: `/raid join <raidId>`
+5. Verify: Guards should appear at your marked locations!
+
+**Next up:** V3.2 — The Purpose (Quests). Implementing a simple quest system so players have a reason to risk their gear!
+
+### ✅ V3.2 — The Purpose (Quests & Persistence)
+**Completed:** Implemented comprehensive quest system with persistence
+
+**Changes Made:**
+- **Core Quest System**
+  - New Package: `com.raidextraction.quest` containing all quest-related functionality
+  - `QuestManager`: Main service for quest assignment, progress tracking, and rewards
+  - `TaskType`: Enum defining quest types (EXTRACT_ITEMS, KILL_MOBS, DEPOSIT_CREDITS, etc.)
+  - `Quest` and `QuestTask`: Data models for quests and individual tasks
+
+- **Persistence Layer**
+  - `QuestRepository` and `SQLiteQuestRepository`: Database storage for quest progress
+  - Player quest progress survives server restarts
+  - Automatic schema creation and migration
+
+- **Player Integration**
+  - `QuestEventListener`: Tracks player actions (kills, extractions, deposits) for quest progress
+  - `QuestCommand`: Player commands (`/quest list`, `/quest accept`, `/quest claim`, `/quest info`)
+  - `QuestView`: Integration with trader UI for quest management
+
+- **System Integration**
+  - `QuestIntegration`: Main integration class tying all components together
+  - Plugin modifications to register quest system components
+  - Automated tests verifying persistence functionality
+
+**How to Test:**
+1. Join the game and use: `/quest list`
+2. Accept a quest: `/quest accept extract_junk_a`
+3. Complete quest objectives (extract items, kill mobs, deposit credits)
+4. Claim rewards: `/quest claim extract_junk_a`
+5. Verify progress persists after server restart
+
+**Next up:** V3.3 — The Infrastructure (World Instancing). Implementing fresh map instances for each raid.
+
+### ✅ V3.4 — Hype & Launch (Release Automation)
+**Completed:** Implemented release automation and milestone completion
+
+**Changes Made:**
+- **Release Process Automation**
+  - Created automated build scripts for consistent releases
+  - Implemented resource pack zip generation with proper structure
+  - Added SHA1 checksum generation for release verification
+  - Streamlined the v0.1.0 milestone completion process
+
+- **Traction Plan Completion**
+  - Finalized community outreach strategy
+  - Completed documentation for external playtesting
+  - Prepared release assets and distribution channels
+  - Established milestone tracking and verification procedures
+
+**How to Test:**
+1. Run the release automation script to verify build process
+2. Check generated resource pack zip integrity
+3. Validate SHA1 checksums match expected values
+4. Confirm v0.1.0 milestone requirements are met
+
+**Next up:** V3.5 — Community Release. Publishing to community platforms and gathering feedback.
+
+## VERSION 3: THE LIVING WORLD & THE GRINDERS LOOP
+This plan transitions Extraction-MC from a "technical framework" to a "playable game." Version 2 built the plumbing (loot, stash, extraction); Version 3 builds the motivation (AI, Quests, and Scale).
+
+### User Review Required
+**IMPORTANT**
+
+**Momentum Check:** You mentioned losing momentum. Often this happens when you're stuck in "plumbing" (like World Cloning). I suggest balancing "hard infrastructure" (Instancing) with "fun gameplay" (AI/Quests).
+
+**WARNING**
+
+**World Cloning (V2.2):** This is the biggest technical hurdle left from V2. If you want to skip it for now and focus on AI, we can stick to "Single World" raids for a bit longer, but it will eventually block multiplayer scaling.
+
+### Proposed Changes
+#### V3.0: The Strategic Pivot
+Instead of finishing every backlog item, we focus on the minimum viable fun.
+
+#### [Component] AI & The Threat (V3.1)
+- [NEW] `com.raidextraction.ai.SimpleGuardManager`: Spawns vanilla mobs (Zombies/Skeletons) with custom Gear and AI attributes at Loot Markers.
+- [NEW] `com.raidextraction.ai.detection.DetectionListener`: Mobs "detect" players who sprint or open chests nearby.
+- [MODIFY] `locations.yml`: Add guard_spawn type to the Map Editor.
+
+#### [VISUALS] Custom AI Resource Pack Support:
+**TIP**
+
+How we do custom AI visuals: Since we already use CustomModelData for weapons, we can use the "Item-on-Head" trick for AI. We spawn an invisible mob (Zombie/Skeleton) and equip it with a custom item on its head that has a high-detail model (e.g., a soldier's head or a monster mask). This allows custom AI visuals without requiring client-side mods like OptiFine.
+
+#### [Component] Quests & Persistence (V3.2) ✅ COMPLETED
+- [x] `com.raidextraction.quest.QuestManager`: Track repeatable and one-time tasks.
+- [x] `com.raidextraction.quest.TaskType`: "Extract 3 Watches", "Kill 5 Zombies at Factory", "Deposit 5000 Credits".
+- [x] `com.raidextraction.trader.TraderUI`: Add a "Quests" tab to the existing Trader UI.
+
+#### [Component] Infrastructure: World Instancing (V3.3)
+- [FINISH] `com.raidextraction.integration.paper.PaperWorldManager`: Implement loadRaidWorld using FileUtil to clone template folders.
+- [NEW] `com.raidextraction.util.WorldCleanupTask`: Periodic task to delete old instance folders (handling Windows file lock retries).
+
+
+### Quest System Enhancements
+- [x] Added dedicated quest turn-in button to trader GUI (V3.2)
+  - New NETHER_STAR button in slot 13 of trader menu
+  - Supports shift-click to view active quests
+  - Provides clear instructions for quest progression
+  - Integrated with existing quest system for automatic progress tracking
+
+#### [Component] Hype & Launch (V3.4) ✅ COMPLETED
+- [x] v0.1.0 Milestone: Complete the "Traction Plan" in TODO.md.
+- [x] `release-script.sh`: Automate the build + resource pack zip + SHA1 generation.
+
+### Verification Plan
+#### Automated Tests
+- `TestQuestPersistence`: Verify quest progress survives server restart.
+- `TestWorldCloning`: Verify 5 concurrent raids create 5 unique world folders.
+
+#### Manual Verification
+- **The "Scav" Test:** Enter a raid, sprint near a Loot Marker, and verify a "Guard" NPC attacks.
+- **The "Quest" Test:** Accept a quest to extract "Junk Item A", extract it, and verify the Trader pays out.

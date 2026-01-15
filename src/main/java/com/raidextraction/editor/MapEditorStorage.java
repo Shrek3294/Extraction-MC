@@ -115,6 +115,34 @@ public final class MapEditorStorage {
         return new EvacZoneEntry(raidId, name, world, minX, minY, minZ, maxX, maxY, maxZ);
     }
 
+    public GuardSpawnEntry addGuardSpawn(String raidId, Location location, String guardType) {
+        String path = "raids." + raidId + ".guards";
+        List<Map<?, ?>> entries = new ArrayList<>(config.getMapList(path));
+
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("world", location.getWorld().getName());
+        map.put("x", location.getX());
+        map.put("y", location.getY());
+        map.put("z", location.getZ());
+        map.put("yaw", location.getYaw());
+        map.put("pitch", location.getPitch());
+        map.put("type", guardType);
+        entries.add(map);
+
+        config.set(path, entries);
+        save();
+
+        return new GuardSpawnEntry(
+                raidId,
+                location.getWorld().getName(),
+                location.getX(),
+                location.getY(),
+                location.getZ(),
+                location.getYaw(),
+                location.getPitch(),
+                guardType);
+    }
+
     public boolean removeLootContainer(LootContainerEntry entry) {
         String path = "raids." + entry.raidId() + ".loot_containers";
         List<Map<?, ?>> entries = new ArrayList<>(config.getMapList(path));
@@ -217,6 +245,26 @@ public final class MapEditorStorage {
             containers.add(new LootContainerEntry(raidId, world, x, y, z, facing, chance));
         }
         return containers;
+    }
+
+    public List<GuardSpawnEntry> getGuardSpawns(String raidId) {
+        String path = "raids." + raidId + ".guards";
+        List<Map<?, ?>> entries = new ArrayList<>(config.getMapList(path));
+        List<GuardSpawnEntry> guards = new ArrayList<>();
+        for (Map<?, ?> map : entries) {
+            String world = asString(map.get("world"), "");
+            double x = asDouble(map.get("x"), 0.0);
+            double y = asDouble(map.get("y"), 0.0);
+            double z = asDouble(map.get("z"), 0.0);
+            float yaw = (float) asDouble(map.get("yaw"), 0.0);
+            float pitch = (float) asDouble(map.get("pitch"), 0.0);
+            String type = asString(map.get("type"), "BASIC");
+            if (world.isBlank()) {
+                continue;
+            }
+            guards.add(new GuardSpawnEntry(raidId, world, x, y, z, yaw, pitch, type));
+        }
+        return guards;
     }
 
     public int nextEvacZoneIndex(String raidId) {

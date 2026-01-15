@@ -21,6 +21,10 @@ commands:
     description: Administrative raid controls for testing and moderation.
     permission: raid.admin
     usage: "/raidadmin <start|stop|cancel|force-extract|edit|exit|save|validate|undo|debugbounds|lootchance|lootpreview>"
+  quest:
+    description: View and manage quests.
+    permission: raid.user
+    usage: "/quest <list|accept|claim|info>"
 permissions:
   raid.user:
     description: Allows participation in raids and stash access.

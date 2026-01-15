@@ -108,8 +108,10 @@ public final class MapEditorListener implements Listener {
         MapEditorManager.EvacSelectionOutcome outcome = mapEditorManager.setEvacPos2(event.getPlayer(), clicked);
         switch (outcome.status()) {
             case NO_POS1 -> event.getPlayer().sendMessage(TextComponents.legacy("&cSet evac corner 1 first."));
-            case WORLD_MISMATCH -> event.getPlayer().sendMessage(TextComponents.legacy("&cEvac corners must be in the same world."));
-            case NOT_IN_EDITOR_WORLD -> event.getPlayer().sendMessage(TextComponents.legacy("&cEvac corners must be set in the editor world."));
+            case WORLD_MISMATCH ->
+                event.getPlayer().sendMessage(TextComponents.legacy("&cEvac corners must be in the same world."));
+            case NOT_IN_EDITOR_WORLD ->
+                event.getPlayer().sendMessage(TextComponents.legacy("&cEvac corners must be set in the editor world."));
             case NOT_EDITING -> event.getPlayer().sendMessage(TextComponents.legacy("&cYou are not in editor mode."));
             case SAVED -> {
                 event.setCancelled(true);
@@ -119,6 +121,32 @@ public final class MapEditorListener implements Listener {
                         + entry.maxX() + ", " + entry.maxY() + ", " + entry.maxZ() + ")."));
             }
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onGuardToolUse(PlayerInteractEvent event) {
+        Action action = event.getAction();
+        if (action != Action.LEFT_CLICK_BLOCK && action != Action.LEFT_CLICK_AIR) {
+            return;
+        }
+        ItemStack item = event.getItem();
+        if (!mapEditorManager.isGuardTool(item)) {
+            return;
+        }
+        if (!mapEditorManager.isEditing(event.getPlayer())) {
+            event.getPlayer().sendMessage(TextComponents.legacy("&cYou are not in editor mode."));
+            return;
+        }
+        var entry = mapEditorManager.addGuardSpawn(event.getPlayer());
+        if (entry == null) {
+            event.getPlayer().sendMessage(TextComponents.legacy("&cGuard spawns can only be set in the editor world."));
+            return;
+        }
+        event.setCancelled(true);
+        event.getPlayer().sendMessage(TextComponents.legacy("&aGuard spawn set at "
+                + String.format("%.2f", entry.x()) + ", "
+                + String.format("%.2f", entry.y()) + ", "
+                + String.format("%.2f", entry.z()) + "."));
     }
 
     @EventHandler(ignoreCancelled = true)

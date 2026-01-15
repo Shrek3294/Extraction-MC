@@ -17,6 +17,7 @@ import com.raidextraction.raid.RaidManager;
 import com.raidextraction.raid.RaidState;
 import com.raidextraction.stash.ItemData;
 import com.raidextraction.stash.StashService;
+import com.raidextraction.ai.SimpleGuardManager;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.World;
@@ -70,6 +71,7 @@ public final class RaidLifecycleCoordinator {
     private final MapEditorStorage mapEditorStorage;
     private final Logger logger;
     private final RaidStateStore stateStore;
+    private final SimpleGuardManager guardManager;
     private final Map<String, BukkitTask> raidTimeouts = new HashMap<>();
     private final Map<String, Instant> raidDeadlines = new HashMap<>();
     private final Map<String, BossBar> raidBossBars = new HashMap<>();
@@ -112,6 +114,7 @@ public final class RaidLifecycleCoordinator {
         this.regionProvider = Objects.requireNonNull(regionProvider, "regionProvider");
         this.itemDataMapper = Objects.requireNonNull(itemDataMapper, "itemDataMapper");
         this.mapEditorStorage = Objects.requireNonNull(mapEditorStorage, "mapEditorStorage");
+        this.guardManager = new SimpleGuardManager(plugin, mapEditorStorage);
         this.logger = plugin.getLogger();
         this.stateStore = new RaidStateStore(plugin.getDataFolder().toPath().resolve("raid_state.yml"), this.logger);
         this.evacDurationSeconds = Math.max(configManager.getMainConfig().getInt("evac_duration_seconds", 10), 1);
@@ -415,6 +418,7 @@ public final class RaidLifecycleCoordinator {
                 "definitionId", definition.id(),
                 "players", raidInstance.players().size());
         spawnRaidLoot(raidInstance);
+        guardManager.spawnGuards(raidInstance);
         scheduleRaidTimeout(raidInstance);
         startRaidBossBar(raidInstance);
     }
@@ -1210,8 +1214,8 @@ public final class RaidLifecycleCoordinator {
             }
             inventorySnapshotService.clear(playerId);
         }
-        extractionService.clearRaid(raidId);
         extractionSuccessNotified.remove(raidId);
+        guardManager.cleanupGuards(raidId);
         raidManager.endRaid(raidId);
         return true;
     }
@@ -1308,7 +1312,8 @@ public final class RaidLifecycleCoordinator {
         player.showTitle(Title.title(
                 Component.text("Extraction complete"),
                 Component.text("Loot secured"),
-                Title.Times.times(Duration.ofMillis(10L * 50L), Duration.ofMillis(50L * 50L), Duration.ofMillis(10L * 50L))));
+                Title.Times.times(Duration.ofMillis(10L * 50L), Duration.ofMillis(50L * 50L),
+                        Duration.ofMillis(10L * 50L))));
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.1f);
     }
 
@@ -1317,7 +1322,8 @@ public final class RaidLifecycleCoordinator {
         player.showTitle(Title.title(
                 Component.text("Raid failed"),
                 Component.text(finalSubtitle),
-                Title.Times.times(Duration.ofMillis(10L * 50L), Duration.ofMillis(50L * 50L), Duration.ofMillis(10L * 50L))));
+                Title.Times.times(Duration.ofMillis(10L * 50L), Duration.ofMillis(50L * 50L),
+                        Duration.ofMillis(10L * 50L))));
         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
     }
 

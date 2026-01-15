@@ -31,6 +31,7 @@ public final class MapEditorManager {
     private final NamespacedKey lootMarkerKey;
     private final NamespacedKey spawnToolKey;
     private final NamespacedKey evacToolKey;
+    private final NamespacedKey guardToolKey;
     private final Map<UUID, EditorSession> sessions = new HashMap<>();
     private final Map<UUID, Deque<LootContainerEntry>> undoStacks = new HashMap<>();
     private final Map<UUID, BlockSelection> evacSelections = new HashMap<>();
@@ -44,6 +45,7 @@ public final class MapEditorManager {
         this.lootMarkerKey = new NamespacedKey(plugin, "loot_marker_tool");
         this.spawnToolKey = new NamespacedKey(plugin, "spawn_tool");
         this.evacToolKey = new NamespacedKey(plugin, "evac_tool");
+        this.guardToolKey = new NamespacedKey(plugin, "guard_tool");
     }
 
     public void enterSession(Player player, String raidId, String worldName) {
@@ -215,6 +217,17 @@ public final class MapEditorManager {
         return new EvacSelectionOutcome(EvacSelectionStatus.SAVED, entry);
     }
 
+    public GuardSpawnEntry addGuardSpawn(Player player) {
+        EditorSession session = ensureSession(player);
+        if (session == null) {
+            return null;
+        }
+        if (!worldManager.isEditorWorld(player.getWorld().getName())) {
+            return null;
+        }
+        return storage.addGuardSpawn(session.raidId(), player.getLocation(), "BASIC");
+    }
+
     public void save() {
         storage.saveNow();
     }
@@ -259,6 +272,17 @@ public final class MapEditorManager {
         return meta.getPersistentDataContainer().has(evacToolKey, PersistentDataType.BYTE);
     }
 
+    public boolean isGuardTool(ItemStack stack) {
+        if (stack == null || stack.getType() != Material.NETHERITE_UPGRADE_SMITHING_TEMPLATE) {
+            return false;
+        }
+        ItemMeta meta = stack.getItemMeta();
+        if (meta == null) {
+            return false;
+        }
+        return meta.getPersistentDataContainer().has(guardToolKey, PersistentDataType.BYTE);
+    }
+
     public String getToolLabel(ItemStack stack) {
         if (isSpawnTool(stack)) {
             return "Spawn";
@@ -268,6 +292,9 @@ public final class MapEditorManager {
         }
         if (isLootMarker(stack)) {
             return "Loot";
+        }
+        if (isGuardTool(stack)) {
+            return "Guard";
         }
         return null;
     }
@@ -302,6 +329,10 @@ public final class MapEditorManager {
         }
         if (!hasEvacTool(player)) {
             player.getInventory().addItem(createEvacTool());
+            added = true;
+        }
+        if (!hasGuardTool(player)) {
+            player.getInventory().addItem(createGuardTool());
             added = true;
         }
         if (added) {
@@ -360,6 +391,15 @@ public final class MapEditorManager {
         return false;
     }
 
+    private boolean hasGuardTool(Player player) {
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (isGuardTool(item)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private ItemStack createLootMarker() {
         ItemStack item = ItemStack.of(Material.STICK);
         ItemMeta meta = item.getItemMeta();
@@ -383,14 +423,14 @@ public final class MapEditorManager {
             if (world == null) {
                 continue;
             }
-        Block chestBlock = world.getBlockAt(entry.x(), entry.y(), entry.z());
-        BlockFace facing = parseFacing(entry.facing());
-        if (!chestBlock.getType().isAir()) {
-            continue;
-        }
-        chestBlock.setType(Material.CHEST, false);
-        BlockData data = chestBlock.getBlockData();
-        if (data instanceof Directional directional) {
+            Block chestBlock = world.getBlockAt(entry.x(), entry.y(), entry.z());
+            BlockFace facing = parseFacing(entry.facing());
+            if (!chestBlock.getType().isAir()) {
+                continue;
+            }
+            chestBlock.setType(Material.CHEST, false);
+            BlockData data = chestBlock.getBlockData();
+            if (data instanceof Directional directional) {
                 directional.setFacing(facing);
                 chestBlock.setBlockData(directional, false);
             }
@@ -462,6 +502,18 @@ public final class MapEditorManager {
                 "&7Left-click to set evac corner 1",
                 "&7Right-click to set evac corner 2.")));
         meta.getPersistentDataContainer().set(evacToolKey, PersistentDataType.BYTE, (byte) 1);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private ItemStack createGuardTool() {
+        ItemStack item = ItemStack.of(Material.NETHERITE_UPGRADE_SMITHING_TEMPLATE);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(TextComponents.legacy("&cGuard Tool"));
+        meta.lore(TextComponents.legacyLines(List.of(
+                "&7Left-click to set guard spawn",
+                "&7at your current location.")));
+        meta.getPersistentDataContainer().set(guardToolKey, PersistentDataType.BYTE, (byte) 1);
         item.setItemMeta(meta);
         return item;
     }

@@ -91,3 +91,4 @@ Use this checklist once a local Paper server is available. The core phase is com
 - [x] Test extraction spam protection and idempotent completion.
 - [x] Validate stash persistence across restarts and crashes.
 - [x] Verify loot roll distribution and weighted tables over large samples.
+

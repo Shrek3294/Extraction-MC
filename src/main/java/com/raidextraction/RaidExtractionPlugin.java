@@ -48,6 +48,7 @@ import com.raidextraction.profile.PlayerProfileService;
 import com.raidextraction.profile.SQLitePlayerProfileRepository;
 import com.raidextraction.trader.TraderService;
 import com.raidextraction.trader.TraderView;
+import com.raidextraction.quest.QuestIntegration;
 import com.raidextraction.ux.HudService;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -92,6 +93,7 @@ public final class RaidExtractionPlugin extends JavaPlugin {
     private CustomEnchantListener customEnchantListener;
     private TraderService traderService;
     private TraderView traderView;
+    private QuestIntegration questIntegration;
 
     @Override
     public void onLoad() {
@@ -180,6 +182,18 @@ public final class RaidExtractionPlugin extends JavaPlugin {
         return raidLifecycleCoordinator;
     }
 
+    public QuestIntegration getQuestIntegration() {
+        return questIntegration;
+    }
+
+    public LootPricingService getLootPricingService() {
+        return lootPricingService;
+    }
+
+    public ItemKeys getItemKeys() {
+        return itemKeys;
+    }
+
     private void prepareDataFolder() {
         if (!getDataFolder().exists() && getDataFolder().mkdirs()) {
             getLogger().info("Created plugin data folder at " + getDataFolder().getAbsolutePath());
@@ -259,6 +273,14 @@ public final class RaidExtractionPlugin extends JavaPlugin {
                 regionProvider,
                 itemDataMapper,
                 mapEditorStorage);
+        
+        // Initialize quest system
+        questIntegration = new QuestIntegration(this, profileService);
+        questIntegration.initialize();
+        
+        // Connect quest view to trader view
+        traderView.setQuestView(questIntegration.getQuestView());
+        traderView.setQuestManager(questIntegration.getQuestManager());
     }
 
     private void registerCommands() {
