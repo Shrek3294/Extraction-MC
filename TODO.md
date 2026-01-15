@@ -218,50 +218,18 @@
 
 **Next up:** V3.3 — The Infrastructure (World Instancing). Implementing fresh map instances for each raid.
 
-### ✅ V3.4 — Hype & Launch (Release Automation)
-**Completed:** Implemented release automation and milestone completion
-
-**Changes Made:**
-- **Release Process Automation**
-  - Created automated build scripts for consistent releases
-  - Implemented resource pack zip generation with proper structure
-  - Added SHA1 checksum generation for release verification
-  - Streamlined the v0.1.0 milestone completion process
-
-- **Traction Plan Completion**
-  - Finalized community outreach strategy
-  - Completed documentation for external playtesting
-  - Prepared release assets and distribution channels
-  - Established milestone tracking and verification procedures
-
-**How to Test:**
-1. Run the release automation script to verify build process
-2. Check generated resource pack zip integrity
-3. Validate SHA1 checksums match expected values
-4. Confirm v0.1.0 milestone requirements are met
-
-**Next up:** V3.5 — Community Release. Publishing to community platforms and gathering feedback.
-
 ## VERSION 3: THE LIVING WORLD & THE GRINDERS LOOP
 This plan transitions Extraction-MC from a "technical framework" to a "playable game." Version 2 built the plumbing (loot, stash, extraction); Version 3 builds the motivation (AI, Quests, and Scale).
 
-### User Review Required
-**IMPORTANT**
-
-**Momentum Check:** You mentioned losing momentum. Often this happens when you're stuck in "plumbing" (like World Cloning). I suggest balancing "hard infrastructure" (Instancing) with "fun gameplay" (AI/Quests).
-
-**WARNING**
-
-**World Cloning (V2.2):** This is the biggest technical hurdle left from V2. If you want to skip it for now and focus on AI, we can stick to "Single World" raids for a bit longer, but it will eventually block multiplayer scaling.
 
 ### Proposed Changes
 #### V3.0: The Strategic Pivot
 Instead of finishing every backlog item, we focus on the minimum viable fun.
 
 #### [Component] AI & The Threat (V3.1)
-- [NEW] `com.raidextraction.ai.SimpleGuardManager`: Spawns vanilla mobs (Zombies/Skeletons) with custom Gear and AI attributes at Loot Markers.
-- [NEW] `com.raidextraction.ai.detection.DetectionListener`: Mobs "detect" players who sprint or open chests nearby.
-- [MODIFY] `locations.yml`: Add guard_spawn type to the Map Editor.
+[X] [NEW] `com.raidextraction.ai.SimpleGuardManager`: Spawns vanilla mobs (Zombies/Skeletons) with custom Gear and AI attributes at Loot Markers.
+[X] [NEW] `com.raidextraction.ai.detection.DetectionListener`: Mobs "detect" players who sprint or open chests nearby.
+[X] [MODIFY] `locations.yml`: Add guard_spawn type to the Map Editor.
 
 #### [VISUALS] Custom AI Resource Pack Support:
 **TIP**
@@ -280,19 +248,16 @@ How we do custom AI visuals: Since we already use CustomModelData for weapons, w
 
 ### Quest System Enhancements
 - [x] Added dedicated quest turn-in button to trader GUI (V3.2)
-  - New NETHER_STAR button in slot 13 of trader menu
-  - Supports shift-click to view active quests
-  - Provides clear instructions for quest progression
-  - Integrated with existing quest system for automatic progress tracking
+  [x] New NETHER_STAR button in slot 13 of trader menu
+  [x] Supports shift-click to view active quests
+  [x] Provides clear instructions for quest progression
+  [x] Integrated with existing quest system for automatic progress tracking
 
-#### [Component] Hype & Launch (V3.4) ✅ COMPLETED
-- [x] v0.1.0 Milestone: Complete the "Traction Plan" in TODO.md.
-- [x] `release-script.sh`: Automate the build + resource pack zip + SHA1 generation.
 
 ### Verification Plan
 #### Automated Tests
-- `TestQuestPersistence`: Verify quest progress survives server restart.
-- `TestWorldCloning`: Verify 5 concurrent raids create 5 unique world folders.
+[X] `TestQuestPersistence`: Verify quest progress survives server restart.
+[X] `TestWorldCloning`: Verify 5 concurrent raids create 5 unique world folders.
 
 #### Manual Verification
 - **The "Scav" Test:** Enter a raid, sprint near a Loot Marker, and verify a "Guard" NPC attacks.

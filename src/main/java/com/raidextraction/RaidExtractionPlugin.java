@@ -33,6 +33,7 @@ import com.raidextraction.listener.ExtractionListener;
 import com.raidextraction.listener.LootInteractionListener;
 import com.raidextraction.listener.MapEditorListener;
 import com.raidextraction.listener.RaidListener;
+import com.raidextraction.listener.CreatureSpawnListener;
 import com.raidextraction.ux.CrateAnimationService;
 import com.raidextraction.ux.WeaponBenchView;
 import com.raidextraction.ux.WeaponGuideBookFactory;
@@ -314,6 +315,7 @@ public final class RaidExtractionPlugin extends JavaPlugin {
     private void registerListeners() {
         getServer().getPluginManager().registerEvents(new RaidListener(raidLifecycleCoordinator), this);
         getServer().getPluginManager().registerEvents(new ExtractionListener(raidLifecycleCoordinator), this);
+        getServer().getPluginManager().registerEvents(new CreatureSpawnListener(configManager), this);
         getServer().getPluginManager().registerEvents(stashView, this);
         getServer().getPluginManager().registerEvents(new MapEditorListener(mapEditorManager), this);
         getServer().getPluginManager().registerEvents(manaService, this);

@@ -8,6 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
@@ -43,10 +44,12 @@ public final class SimpleGuardManager {
         List<UUID> guardIds = new ArrayList<>();
         for (GuardSpawnEntry spawn : spawns) {
             Location loc = new Location(world, spawn.x(), spawn.y(), spawn.z(), spawn.yaw(), spawn.pitch());
-            LivingEntity guard = (LivingEntity) world.spawnEntity(loc, EntityType.ZOMBIE);
+            LivingEntity guard = (LivingEntity) world.spawnEntity(loc, EntityType.ZOMBIE, CreatureSpawnEvent.SpawnReason.CUSTOM);
 
-            // Basic Guard Polish
+            // Disable movement and AI
+            guard.setAI(false);
             guard.setRemoveWhenFarAway(false);
+            guard.setInvulnerable(false); // Guardians can be damaged/killed
             
             // Add visible custom names with variety
             String[] guardNames = {
