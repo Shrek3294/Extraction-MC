@@ -216,7 +216,8 @@ public final class RaidExtractionPlugin extends JavaPlugin {
         customItemRegistry = new CustomItemRegistry(configManager.getItemsDefinition());
         customItemFactory = new CustomItemFactory(itemKeys);
         customEnchantRegistry = new CustomEnchantRegistry(configManager.getItemsDefinition());
-        weaponUpgradeService = new com.raidextraction.item.WeaponUpgradeService(itemKeys, customItemRegistry, customEnchantRegistry);
+        weaponUpgradeService = new com.raidextraction.item.WeaponUpgradeService(itemKeys, customItemRegistry,
+                customEnchantRegistry);
         weaponBenchView = new WeaponBenchView(this, itemKeys, weaponUpgradeService);
         weaponGuideBookFactory = new WeaponGuideBookFactory(configManager.getItemsDefinition());
         lootService = new LootService(lootTableRegistry, new Random(),
@@ -231,7 +232,8 @@ public final class RaidExtractionPlugin extends JavaPlugin {
         hudService = new HudService(this, configManager, profileService);
         hudService.start();
         customEnchantListener = new CustomEnchantListener(this, itemKeys, customEnchantRegistry);
-        traderService = new TraderService(this, configManager, lootPricingService, itemKeys, customItemRegistry, customItemFactory);
+        traderService = new TraderService(this, configManager, lootPricingService, itemKeys, customItemRegistry,
+                customItemFactory);
         traderService.ensureNpcPresent();
         traderView = new TraderView(this, traderService, profileService);
         extractionService = new ExtractionService(new EvacTracker(clock), clock);
@@ -262,14 +264,16 @@ public final class RaidExtractionPlugin extends JavaPlugin {
     private void registerCommands() {
         if (getCommand("raid") != null) {
             getCommand("raid").setExecutor(
-                    new RaidCommand(raidManager, queueManager, raidLifecycleCoordinator, extractionService, hudService));
+                    new RaidCommand(raidManager, queueManager, raidLifecycleCoordinator, extractionService,
+                            hudService));
         }
         if (getCommand("stash") != null) {
             getCommand("stash").setExecutor(new StashCommand(stashView, raidManager));
         }
         if (getCommand("weapon") != null) {
             getCommand("weapon").setExecutor(
-                    new WeaponCommand(this, customItemRegistry, customItemFactory, weaponUpgradeService, weaponBenchView,
+                    new WeaponCommand(this, customItemRegistry, customItemFactory, weaponUpgradeService,
+                            weaponBenchView,
                             weaponGuideBookFactory));
         }
         if (getCommand("raidadmin") != null) {
@@ -280,7 +284,8 @@ public final class RaidExtractionPlugin extends JavaPlugin {
                             raidLifecycleCoordinator,
                             configManager,
                             worldManager,
-                            mapEditorManager));
+                            mapEditorManager,
+                            profileService));
         }
     }
 

@@ -45,7 +45,8 @@ public class LootInteractionListener implements Listener {
 
         // Debug Log
         logger.info("Interact at " + block.getX() + "," + block.getY() + "," + block.getZ() + " type=" + block.getType()
-                + " cancelled=" + event.isCancelled());
+                + " useBlock=" + event.useInteractedBlock()
+                + " useItem=" + event.useItemInHand());
 
         Player player = event.getPlayer();
         Optional<RaidInstance> raidOpt = raidManager.getRaidForPlayer(player.getUniqueId());

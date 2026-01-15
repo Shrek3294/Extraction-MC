@@ -4,6 +4,8 @@ import com.raidextraction.item.CustomEnchantRegistry;
 import com.raidextraction.item.CustomItemType;
 import com.raidextraction.item.ItemKeys;
 import org.bukkit.Particle;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -88,7 +90,13 @@ public final class CustomEnchantListener implements Listener {
             return;
         }
         double heal = 1.0 + (0.5 * harvest);
-        player.setHealth(Math.min(player.getMaxHealth(), player.getHealth() + heal));
+        double maxHealth = maxHealth(player);
+        player.setHealth(Math.min(maxHealth, player.getHealth() + heal));
+    }
+
+    private double maxHealth(Player player) {
+        AttributeInstance attribute = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+        return attribute != null ? attribute.getValue() : player.getHealth();
     }
 
     private void applyMomentum(Player player, EntityDamageByEntityEvent event, int level) {

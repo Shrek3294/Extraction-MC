@@ -39,6 +39,8 @@ Each entry includes:
 - `material`: fallback Bukkit material.
 - `weight`, `min_amount`, `max_amount`.
 
+If a loot entry `id` does not exist in `items.yml`, the plugin will spawn a vanilla item using `material` (so seeing a lot of `IRON_SWORD`/`BREAD`/`PAPER` usually means your table is missing the custom IDs).
+
 See `src/main/resources/loot_tables.yml` and `src/main/java/com/raidextraction/loot/LootService.java`.
 
 ### `items.yml`

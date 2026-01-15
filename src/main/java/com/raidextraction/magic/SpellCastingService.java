@@ -8,6 +8,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Sound;
+import org.bukkit.Tag;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Fireball;
@@ -72,7 +73,8 @@ public final class SpellCastingService implements Listener {
         Player player = event.getPlayer();
         if (isDebug(player)) {
             debug(player, "interact action=" + event.getAction()
-                    + " cancelled=" + event.isCancelled()
+                    + " useBlock=" + event.useInteractedBlock()
+                    + " useItem=" + event.useItemInHand()
                     + " block=" + (event.getClickedBlock() != null ? event.getClickedBlock().getType().name() : "none"));
         }
         ItemStack item = player.getInventory().getItemInMainHand();
@@ -86,7 +88,7 @@ public final class SpellCastingService implements Listener {
         }
 
         Block clicked = event.getClickedBlock();
-        if (clicked != null && clicked.getType().isInteractable() && !player.isSneaking()) {
+        if (clicked != null && isLikelyInteractable(clicked) && !player.isSneaking()) {
             player.sendActionBar(Component.text("Sneak-right-click to cast spells on interactable blocks.", NamedTextColor.GRAY));
             debug(player, "blocked by interactable block without sneak: " + clicked.getType().name());
             return;
@@ -353,6 +355,18 @@ public final class SpellCastingService implements Listener {
         }
         String type = meta.getPersistentDataContainer().get(itemKeys.itemType(), PersistentDataType.STRING);
         return CustomItemType.WEAPON.name().equals(type);
+    }
+
+    private boolean isLikelyInteractable(Block block) {
+        if (block.getState() instanceof org.bukkit.inventory.InventoryHolder) {
+            return true;
+        }
+        var type = block.getType();
+        return Tag.BUTTONS.isTagged(type)
+                || Tag.DOORS.isTagged(type)
+                || Tag.TRAPDOORS.isTagged(type)
+                || Tag.FENCE_GATES.isTagged(type)
+                || type == org.bukkit.Material.LEVER;
     }
 
     private boolean isDebug(Player player) {

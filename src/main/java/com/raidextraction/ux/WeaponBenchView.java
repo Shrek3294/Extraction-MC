@@ -131,13 +131,16 @@ public final class WeaponBenchView implements Listener {
             player.sendActionBar(Component.text("Place a weapon + mod first.", NamedTextColor.GRAY));
             return;
         }
-        var result = upgradeService.applyMod(player, weapon, mod);
+        var outcome = upgradeService.applyMod(player, weapon, mod);
+        var result = outcome.result();
         if (!result.ok()) {
             player.sendActionBar(Component.text(result.message(), NamedTextColor.RED));
             return;
         }
-        inv.setItem(WEAPON_SLOT, weapon);
-        inv.setItem(MOD_SLOT, mod.getType().isAir() ? null : mod);
+        ItemStack updatedWeapon = outcome.weaponStack();
+        ItemStack updatedMod = outcome.modStack();
+        inv.setItem(WEAPON_SLOT, updatedWeapon);
+        inv.setItem(MOD_SLOT, updatedMod == null || updatedMod.getType().isAir() ? null : updatedMod);
     }
 
     private void fill(Inventory inv) {

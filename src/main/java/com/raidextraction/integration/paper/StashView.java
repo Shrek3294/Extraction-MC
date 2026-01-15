@@ -3,6 +3,7 @@ package com.raidextraction.integration.paper;
 import com.raidextraction.integration.ItemDataMapper;
 import com.raidextraction.stash.ItemData;
 import com.raidextraction.stash.StashService;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -66,12 +67,13 @@ public final class StashView implements Listener {
                 if (!player.isOnline()) {
                     return;
                 }
-                Inventory inventory = plugin.getServer().createInventory(player, INVENTORY_SIZE, INVENTORY_TITLE);
+                Inventory inventory = plugin.getServer().createInventory(player, INVENTORY_SIZE, Component.text(INVENTORY_TITLE));
                 StashSession session = new StashSession(playerId, inventory, new ArrayList<>(loaded),
                         stashService.capacity(playerId));
                 sessions.put(playerId, session);
                 render(session);
                 player.openInventory(inventory);
+                player.sendMessage("Stash: shift-click items to deposit; click stash items to withdraw.");
             });
         });
     }
@@ -92,8 +94,21 @@ public final class StashView implements Listener {
         boolean topClick = event.getClickedInventory().equals(session.inventory());
         boolean shiftFromBottom = event.isShiftClick()
                 && event.getClickedInventory().equals(event.getView().getBottomInventory());
+        ItemStack cursor = event.getCursor();
+        boolean cursorDeposit = topClick && !cursor.isEmpty();
         if (topClick || shiftFromBottom) {
             event.setCancelled(true);
+        }
+        if (cursorDeposit) {
+            if (session.busy()) {
+                player.sendMessage("Stash is syncing; please wait a moment.");
+                return;
+            }
+            session.busy(true);
+            ItemStack toDeposit = cursor.clone();
+            event.getView().setCursor(null);
+            deposit(player, session, toDeposit);
+            return;
         }
         if (shiftFromBottom) {
             if (session.busy()) {
@@ -106,7 +121,7 @@ public final class StashView implements Listener {
             }
             session.busy(true);
             ItemStack toDeposit = current.clone();
-            event.setCurrentItem(null);
+            event.getClickedInventory().setItem(event.getSlot(), null);
             player.updateInventory();
             deposit(player, session, toDeposit);
             return;
@@ -202,21 +217,21 @@ public final class StashView implements Listener {
     }
 
     private ItemStack navigationItem(Material material, String name) {
-        ItemStack item = new ItemStack(material);
+        ItemStack item = ItemStack.of(material);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(name);
+            meta.displayName(Component.text(name));
             item.setItemMeta(meta);
         }
         return item;
     }
 
     private ItemStack infoItem(int page, int maxPage, int totalItems, int capacity) {
-        ItemStack item = new ItemStack(Material.BOOK);
+        ItemStack item = ItemStack.of(Material.BOOK);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName("Page " + (page + 1) + "/" + (maxPage + 1) + " • " + totalItems + "/"
-                    + Math.max(0, capacity) + " stack(s)");
+            meta.displayName(Component.text("Page " + (page + 1) + "/" + (maxPage + 1) + " • " + totalItems + "/"
+                    + Math.max(0, capacity) + " stack(s)"));
             item.setItemMeta(meta);
         }
         return item;

@@ -2,7 +2,15 @@
 
 **10-second pitch:** Raid Extraction is a data-driven Paper plugin that delivers an extraction-style loop in Minecraft: queue → deploy into a raid, loot under pressure, extract to keep rewards, and stash progress in SQLite. The core systems are live and ready for contributors to expand maps, balance loot, and polish the UX.
 
+## Play the Demo
+
+Want to try Raid Extraction right now? Play the demo: https://github.com/Shrek3294/raid-extraction-demo
+
+
+[https://youtu.be/-F6NsGQA4EQ]
+
 ## Help Wanted Right Now
+## Join the Discord Here https://discord.gg/HMZ9DBEs
 
 We are looking for:
 - **Playtesters** — run raids, find bugs, give balance feedback.

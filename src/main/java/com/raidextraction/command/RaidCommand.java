@@ -6,6 +6,7 @@ import com.raidextraction.raid.QueueManager;
 import com.raidextraction.raid.RaidInstance;
 import com.raidextraction.raid.RaidManager;
 import com.raidextraction.ux.HudService;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -39,12 +40,16 @@ public final class RaidCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("Only players can use this command.");
-            return true;
-        }
         if (args.length == 0) {
             sender.sendMessage("Usage: /raid <join|leave|status|hud> [raidId]");
+            return true;
+        }
+        if (!(sender instanceof Player player)) {
+            String action = args[0].toLowerCase();
+            if ("join".equals(action)) {
+                return handleJoinFromConsole(sender, args);
+            }
+            sender.sendMessage("Only players can use this command.");
             return true;
         }
         String action = args[0].toLowerCase();
@@ -78,10 +83,15 @@ public final class RaidCommand implements CommandExecutor {
             sender.sendMessage("Usage: /raid join <raidId>");
             return true;
         }
-        String raidId = args[1];
-        if (!raidManager.definitions().containsKey(raidId)) {
-            sender.sendMessage("Unknown raid id: " + raidId);
+        String requestedRaidId = args[1] != null ? args[1].trim() : "";
+        String raidId = resolveRaidId(requestedRaidId);
+        if (raidId == null) {
+            sender.sendMessage("Unknown raid id: " + requestedRaidId);
+            sender.sendMessage("Available raids: " + String.join(", ", raidManager.definitions().keySet()));
             return true;
+        }
+        if (!raidId.equals(requestedRaidId)) {
+            sender.sendMessage("Interpreting raid id '" + requestedRaidId + "' as '" + raidId + "'.");
         }
         if (raidManager.hasActiveRaidForDefinition(raidId)) {
             sender.sendMessage("Raid " + raidId + " is already in progress. Please wait for it to finish.");
@@ -96,6 +106,93 @@ public final class RaidCommand implements CommandExecutor {
         raidLifecycleCoordinator.startFromQueue(raidId).ifPresent(instance ->
                 sender.sendMessage("Raid found enough players; deploying raid " + instance.definition().id() + " (id: " + instance.id() + ")."));
         return true;
+    }
+
+    private boolean handleJoinFromConsole(CommandSender sender, String[] args) {
+        if (args.length < 3) {
+            sender.sendMessage("Usage: /raid join <playerName> <raidId>");
+            return true;
+        }
+        Player player = resolvePlayer(args[1]);
+        if (player == null) {
+            sender.sendMessage("Player is not online: " + args[1]);
+            return true;
+        }
+        UUID playerId = player.getUniqueId();
+
+        ExtractionService.CooldownResult cooldown = extractionService.checkCommandCooldown(playerId);
+        if (!cooldown.allowed()) {
+            long seconds = Math.max(1L, (long) Math.ceil(cooldown.remaining().toMillis() / 1000.0));
+            sendTo(sender, player, "Slow down. Try again in " + seconds + "s.");
+            raidLifecycleCoordinator.logCommandCooldown(playerId, "/raid join", cooldown.remaining());
+            return true;
+        }
+
+        String requestedRaidId = args[2] != null ? args[2].trim() : "";
+        String raidId = resolveRaidId(requestedRaidId);
+        if (raidId == null) {
+            sendTo(sender, player, "Unknown raid id: " + requestedRaidId);
+            sendTo(sender, player, "Available raids: " + String.join(", ", raidManager.definitions().keySet()));
+            return true;
+        }
+        if (!raidId.equals(requestedRaidId)) {
+            player.sendMessage("Interpreting raid id '" + requestedRaidId + "' as '" + raidId + "'.");
+        }
+        if (raidManager.hasActiveRaidForDefinition(raidId)) {
+            player.sendMessage("Raid " + raidId + " is already in progress. Please wait for it to finish.");
+            return true;
+        }
+        boolean queued = queueManager.enqueue(raidId, playerId);
+        if (!queued) {
+            player.sendMessage("You are already queued for a raid.");
+            return true;
+        }
+        player.sendMessage("Queued for raid " + raidId + ". Waiting for enough players to deploy.");
+        raidLifecycleCoordinator.startFromQueue(raidId).ifPresent(instance ->
+                player.sendMessage("Raid found enough players; deploying raid " + instance.definition().id() + " (id: " + instance.id() + ")."));
+        return true;
+    }
+
+    private Player resolvePlayer(String input) {
+        if (input == null || input.isBlank()) {
+            return null;
+        }
+        Player exact = Bukkit.getPlayerExact(input);
+        if (exact != null) {
+            return exact;
+        }
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            if (online.getName().equalsIgnoreCase(input)) {
+                return online;
+            }
+        }
+        return null;
+    }
+
+    private void sendTo(CommandSender sender, Player player, String message) {
+        if (player != null && player.isOnline() && sender != player) {
+            player.sendMessage(message);
+        }
+        sender.sendMessage(message);
+    }
+
+    private String resolveRaidId(String requestedRaidId) {
+        if (requestedRaidId == null || requestedRaidId.isBlank()) {
+            return null;
+        }
+        if (raidManager.definitions().containsKey(requestedRaidId)) {
+            return requestedRaidId;
+        }
+        String normalized = requestedRaidId.replace('-', '_');
+        if (raidManager.definitions().containsKey(normalized)) {
+            return normalized;
+        }
+        for (String id : raidManager.definitions().keySet()) {
+            if (id.equalsIgnoreCase(requestedRaidId) || id.equalsIgnoreCase(normalized)) {
+                return id;
+            }
+        }
+        return null;
     }
 
     private boolean handleLeave(CommandSender sender, UUID playerId) {

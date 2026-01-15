@@ -25,49 +25,49 @@ public final class WeaponUpgradeService {
         this.enchantRegistry = Objects.requireNonNull(enchantRegistry, "enchantRegistry");
     }
 
-    public ApplyResult applyMod(Player player, ItemStack weaponStack, ItemStack modStack) {
+    public ApplyOutcome applyMod(Player player, ItemStack weaponStack, ItemStack modStack) {
         if (player == null || weaponStack == null || modStack == null) {
-            return ApplyResult.failure("Missing items");
+            return new ApplyOutcome(ApplyResult.failure("Missing items"), weaponStack, modStack);
         }
         if (!isWeapon(weaponStack)) {
-            return ApplyResult.failure("Main item is not a weapon");
+            return new ApplyOutcome(ApplyResult.failure("Main item is not a weapon"), weaponStack, modStack);
         }
         if (!isMod(modStack)) {
-            return ApplyResult.failure("Mod item is not a mod");
+            return new ApplyOutcome(ApplyResult.failure("Mod item is not a mod"), weaponStack, modStack);
         }
 
         String modId = CustomItemFactory.readItemId(keys, modStack);
         if (modId == null || modId.isBlank()) {
-            return ApplyResult.failure("Unknown mod");
+            return new ApplyOutcome(ApplyResult.failure("Unknown mod"), weaponStack, modStack);
         }
         ModDefinition mod = registry.getMod(modId).orElse(null);
         if (mod == null) {
-            return ApplyResult.failure("Unregistered mod: " + modId);
+            return new ApplyOutcome(ApplyResult.failure("Unregistered mod: " + modId), weaponStack, modStack);
         }
 
         ItemMeta weaponMeta = weaponStack.getItemMeta();
         if (weaponMeta == null) {
-            return ApplyResult.failure("Weapon has no meta");
+            return new ApplyOutcome(ApplyResult.failure("Weapon has no meta"), weaponStack, modStack);
         }
         PersistentDataContainer pdc = weaponMeta.getPersistentDataContainer();
         if (mod.category() == ModCategory.ENCHANT) {
             ApplyResult enchantResult = applyEnchant(player, weaponStack, pdc, mod);
             if (!enchantResult.ok()) {
-                return enchantResult;
+                return new ApplyOutcome(enchantResult, weaponStack, modStack);
             }
         } else {
             Integer modSlotsRaw = pdc.get(keys.modSlots(), PersistentDataType.INTEGER);
             int modSlots = Math.max(0, modSlotsRaw != null ? modSlotsRaw : 0);
             List<String> currentMods = readMods(pdc);
             if (modSlots <= 0) {
-                return ApplyResult.failure("This weapon has no mod slots");
+                return new ApplyOutcome(ApplyResult.failure("This weapon has no mod slots"), weaponStack, modStack);
             }
             if (currentMods.size() >= modSlots) {
-                return ApplyResult.failure("No mod slots available");
+                return new ApplyOutcome(ApplyResult.failure("No mod slots available"), weaponStack, modStack);
             }
 
             if (currentMods.contains(mod.id())) {
-                return ApplyResult.failure("This mod is already installed");
+                return new ApplyOutcome(ApplyResult.failure("This mod is already installed"), weaponStack, modStack);
             }
             currentMods.add(mod.id());
             writeMods(pdc, currentMods);
@@ -84,11 +84,11 @@ public final class WeaponUpgradeService {
         weaponMeta.lore(buildLore(weaponMeta.displayName(), pdc, unlocked));
         weaponStack.setItemMeta(weaponMeta);
 
-        consumeOne(modStack);
+        ItemStack updatedModStack = consumeOne(modStack);
         player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 0.7f, 1.2f);
         player.sendActionBar(Component.text((mod.category() == ModCategory.ENCHANT ? "Enchanted: " : "Mod installed: ") + mod.id(),
                 NamedTextColor.GREEN));
-        return ApplyResult.success();
+        return new ApplyOutcome(ApplyResult.success(), weaponStack, updatedModStack);
     }
 
     private boolean isWeapon(ItemStack stack) {
@@ -99,14 +99,13 @@ public final class WeaponUpgradeService {
         return CustomItemType.MOD.equals(CustomItemFactory.readItemType(keys, stack));
     }
 
-    private void consumeOne(ItemStack stack) {
+    private ItemStack consumeOne(ItemStack stack) {
         int next = stack.getAmount() - 1;
         if (next <= 0) {
-            stack.setType(org.bukkit.Material.AIR);
-            stack.setAmount(1);
-            return;
+            return ItemStack.empty();
         }
         stack.setAmount(next);
+        return stack;
     }
 
     private List<String> readMods(PersistentDataContainer pdc) {
@@ -248,5 +247,8 @@ public final class WeaponUpgradeService {
         public static ApplyResult failure(String message) {
             return new ApplyResult(false, message);
         }
+    }
+
+    public record ApplyOutcome(ApplyResult result, ItemStack weaponStack, ItemStack modStack) {
     }
 }

@@ -1,7 +1,8 @@
 package com.raidextraction.editor;
 
 import com.raidextraction.integration.WorldManager;
-import org.bukkit.ChatColor;
+import com.raidextraction.util.TextComponents;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -277,15 +278,15 @@ public final class MapEditorManager {
         }
         String label = getToolLabel(stack);
         if (label == null) {
-            player.sendActionBar("");
+            player.sendActionBar(Component.empty());
             return;
         }
-        player.sendActionBar("Tool: " + label);
+        player.sendActionBar(TextComponents.legacy("&7Tool:&r " + label));
     }
 
     private void clearToolActionBar(Player player) {
         if (player != null) {
-            player.sendActionBar("");
+            player.sendActionBar(Component.empty());
         }
     }
 
@@ -304,7 +305,7 @@ public final class MapEditorManager {
             added = true;
         }
         if (added) {
-            player.sendMessage(ChatColor.GREEN + "Editor tools added to your inventory.");
+            player.sendMessage(TextComponents.legacy("&aEditor tools added to your inventory."));
         }
     }
 
@@ -360,12 +361,12 @@ public final class MapEditorManager {
     }
 
     private ItemStack createLootMarker() {
-        ItemStack item = new ItemStack(Material.STICK);
+        ItemStack item = ItemStack.of(Material.STICK);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(ChatColor.GOLD + "Loot Marker");
-        meta.setLore(List.of(
-                ChatColor.GRAY + "Shift-right-click a block",
-                ChatColor.GRAY + "to save a loot spawn point."));
+        meta.displayName(TextComponents.legacy("&6Loot Marker"));
+        meta.lore(TextComponents.legacyLines(List.of(
+                "&7Shift-right-click a block",
+                "&7to save a loot spawn point.")));
         meta.getPersistentDataContainer().set(lootMarkerKey, PersistentDataType.BYTE, (byte) 1);
         item.setItemMeta(meta);
         return item;
@@ -442,24 +443,24 @@ public final class MapEditorManager {
     }
 
     private ItemStack createSpawnTool() {
-        ItemStack item = new ItemStack(Material.COMPASS);
+        ItemStack item = ItemStack.of(Material.COMPASS);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(ChatColor.AQUA + "Spawn Tool");
-        meta.setLore(List.of(
-                ChatColor.GRAY + "Left-click to set spawn",
-                ChatColor.GRAY + "at your current location."));
+        meta.displayName(TextComponents.legacy("&bSpawn Tool"));
+        meta.lore(TextComponents.legacyLines(List.of(
+                "&7Left-click to set spawn",
+                "&7at your current location.")));
         meta.getPersistentDataContainer().set(spawnToolKey, PersistentDataType.BYTE, (byte) 1);
         item.setItemMeta(meta);
         return item;
     }
 
     private ItemStack createEvacTool() {
-        ItemStack item = new ItemStack(Material.BLAZE_ROD);
+        ItemStack item = ItemStack.of(Material.BLAZE_ROD);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(ChatColor.YELLOW + "Evac Tool");
-        meta.setLore(List.of(
-                ChatColor.GRAY + "Left-click to set evac corner 1",
-                ChatColor.GRAY + "Right-click to set evac corner 2."));
+        meta.displayName(TextComponents.legacy("&eEvac Tool"));
+        meta.lore(TextComponents.legacyLines(List.of(
+                "&7Left-click to set evac corner 1",
+                "&7Right-click to set evac corner 2.")));
         meta.getPersistentDataContainer().set(evacToolKey, PersistentDataType.BYTE, (byte) 1);
         item.setItemMeta(meta);
         return item;

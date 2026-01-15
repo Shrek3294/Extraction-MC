@@ -3,7 +3,8 @@ package com.raidextraction.ux;
 import com.raidextraction.item.ItemsConfig;
 import com.raidextraction.item.ModDefinition;
 import com.raidextraction.item.WeaponDefinition;
-import org.bukkit.ChatColor;
+import com.raidextraction.util.TextComponents;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
@@ -22,73 +23,74 @@ public final class WeaponGuideBookFactory {
     }
 
     public ItemStack createGuideBook() {
-        ItemStack book = new ItemStack(Material.WRITTEN_BOOK);
+        ItemStack book = ItemStack.of(Material.WRITTEN_BOOK);
         BookMeta meta = (BookMeta) book.getItemMeta();
         meta.setTitle("Weapon Guide");
         meta.setAuthor("RaidExtraction");
 
-        meta.addPage(pageIntro());
-        meta.addPage(pageRarity());
-        meta.addPage(pageCasting());
-        meta.addPage(pageUpgrading());
-        meta.addPage(pageCoreMods());
-        meta.addPage(pageScrolls());
+        meta.addPages(
+                pageIntro(),
+                pageRarity(),
+                pageCasting(),
+                pageUpgrading(),
+                pageCoreMods(),
+                pageScrolls());
 
         book.setItemMeta(meta);
         return book;
     }
 
-    private String pageIntro() {
-        return color(ChatColor.DARK_AQUA, "Raid Extraction Weapons")
-                + "\n\n"
-                + "This server uses custom weapons with:\n"
-                + "- Rarities\n"
-                + "- Mods (socket items)\n"
-                + "- Spells (right-click)\n"
-                + "- Scrolls (custom enchants)\n\n"
-                + color(ChatColor.GRAY, "Tip:") + " Load the server resource pack for 3D weapon models.";
+    private Component pageIntro() {
+        return TextComponents.legacy(
+                "&3Raid Extraction Weapons&r\n\n"
+                        + "This server uses custom weapons with:\n"
+                        + "- Rarities\n"
+                        + "- Mods (socket items)\n"
+                        + "- Spells (right-click)\n"
+                        + "- Scrolls (custom enchants)\n\n"
+                        + "&7Tip:&r Load the server resource pack for 3D weapon models.");
     }
 
-    private String pageRarity() {
-        return color(ChatColor.DARK_AQUA, "Rarities")
-                + "\n\n"
-                + color(ChatColor.GRAY, "Common") + " - starter tier\n"
-                + color(ChatColor.GREEN, "Uncommon") + " - small upgrades\n"
-                + color(ChatColor.BLUE, "Rare") + " - build-defining\n"
-                + color(ChatColor.DARK_PURPLE, "Epic") + " - late-game\n"
-                + color(ChatColor.GOLD, "Legendary") + " - endgame\n"
-                + color(ChatColor.RED, "Exotic") + " - chase uniques\n\n"
-                + "Higher tiers usually have more mod slots and stronger spell kits.";
+    private Component pageRarity() {
+        return TextComponents.legacy(
+                "&3Rarities&r\n\n"
+                        + "&7Common&r - starter tier\n"
+                        + "&aUncommon&r - small upgrades\n"
+                        + "&9Rare&r - build-defining\n"
+                        + "&5Epic&r - late-game\n"
+                        + "&6Legendary&r - endgame\n"
+                        + "&cExotic&r - chase uniques\n\n"
+                        + "Higher tiers usually have more mod slots and stronger spell kits.");
     }
 
-    private String pageCasting() {
-        return color(ChatColor.DARK_AQUA, "Casting Spells")
-                + "\n\n"
-                + "1) Unlock spell with a CORE mod.\n"
-                + "2) Hold weapon in main hand.\n"
-                + "3) Right-click to cast.\n\n"
-                + color(ChatColor.GRAY, "Interactables:") + " if you're aiming at a chest/door/button, sneak-right-click to cast.\n\n"
-                + color(ChatColor.AQUA, "Mana UI:") + " XP bar shows mana when holding a custom weapon.\n"
-                + color(ChatColor.AQUA, "Cooldown UI:") + " item cooldown overlay shows when your spell is ready.";
+    private Component pageCasting() {
+        return TextComponents.legacy(
+                "&3Casting Spells&r\n\n"
+                        + "1) Unlock spell with a CORE mod.\n"
+                        + "2) Hold weapon in main hand.\n"
+                        + "3) Right-click to cast.\n\n"
+                        + "&7Interactables:&r if you're aiming at a chest/door/button, sneak-right-click to cast.\n\n"
+                        + "&bMana UI:&r XP bar shows mana when holding a custom weapon.\n"
+                        + "&bCooldown UI:&r item cooldown overlay shows when your spell is ready.");
     }
 
-    private String pageUpgrading() {
-        return color(ChatColor.DARK_AQUA, "Mods + Bench")
-                + "\n\n"
-                + "Mods are physical loot items.\n\n"
-                + color(ChatColor.AQUA, "Weapon Bench") + "\n"
-                + "- /weapon bench\n"
-                + "- Place weapon + mod\n"
-                + "- Click Apply\n\n"
-                + color(ChatColor.AQUA, "Quick Apply") + "\n"
-                + "- Weapon in main hand\n"
-                + "- Mod in offhand\n"
-                + "- /weapon apply\n\n"
-                + "CORE mods unlock spells.\n"
-                + "Other mods can buff stats later (v2).";
+    private Component pageUpgrading() {
+        return TextComponents.legacy(
+                "&3Mods + Bench&r\n\n"
+                        + "Mods are physical loot items.\n\n"
+                        + "&bWeapon Bench&r\n"
+                        + "- /weapon bench\n"
+                        + "- Place weapon + mod\n"
+                        + "- Click Apply\n\n"
+                        + "&bQuick Apply&r\n"
+                        + "- Weapon in main hand\n"
+                        + "- Mod in offhand\n"
+                        + "- /weapon apply\n\n"
+                        + "CORE mods unlock spells.\n"
+                        + "Other mods can buff stats later (v2).");
     }
 
-    private String pageCoreMods() {
+    private Component pageCoreMods() {
         Map<String, String> spellToCore = itemsConfig.mods().values().stream()
                 .filter(mod -> mod.unlockSpell() != null && !mod.unlockSpell().isBlank())
                 .collect(Collectors.toMap(
@@ -109,28 +111,19 @@ public final class WeaponGuideBookFactory {
                 ? "No core mods configured."
                 : String.join("\n", lines);
 
-        return color(ChatColor.DARK_AQUA, "Core Mods")
-                + "\n"
-                + color(ChatColor.GRAY, "(unlock weapon spells)")
-                + "\n\n"
-                + body;
+        return TextComponents.legacy("&3Core Mods&r\n&7(unlock weapon spells)&r\n\n" + body);
     }
 
-    private String pageScrolls() {
-        return color(ChatColor.DARK_AQUA, "Scrolls (Enchants)")
-                + "\n\n"
-                + "Scrolls are one-time enchant items.\n"
-                + "Apply them like mods (bench or /weapon apply).\n\n"
-                + color(ChatColor.AQUA, "Current scrolls:") + "\n"
-                + "- Backstab\n"
-                + "- Bleed\n"
-                + "- Momentum\n"
-                + "- Grim Harvest\n\n"
-                + color(ChatColor.GRAY, "Note:") + " some enchants only work on certain weapon types.";
-    }
-
-    private String color(ChatColor color, String text) {
-        return color + text + ChatColor.RESET;
+    private Component pageScrolls() {
+        return TextComponents.legacy(
+                "&3Scrolls (Enchants)&r\n\n"
+                        + "Scrolls are one-time enchant items.\n"
+                        + "Apply them like mods (bench or /weapon apply).\n\n"
+                        + "&bCurrent scrolls:&r\n"
+                        + "- Backstab\n"
+                        + "- Bleed\n"
+                        + "- Momentum\n"
+                        + "- Grim Harvest\n\n"
+                        + "&7Note:&r some enchants only work on certain weapon types.");
     }
 }
-

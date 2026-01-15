@@ -1,7 +1,7 @@
 # Optional lobby trader config. The trader provides a basic credits loop:
 # sell loot for credits and buy starter kits.
 trader:
-  enabled: false
+  enabled: true
 
   # If enabled, the plugin will spawn or re-use a persistent Villager NPC at the lobby spawn.
   npc:

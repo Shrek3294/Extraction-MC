@@ -3,6 +3,7 @@ package com.raidextraction.trader;
 import com.raidextraction.profile.PlayerProfile;
 import com.raidextraction.profile.PlayerProfileRepository;
 import com.raidextraction.profile.PlayerProfileService;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -55,7 +56,7 @@ public final class TraderView implements Listener {
             return;
         }
         UUID playerId = player.getUniqueId();
-        Inventory inventory = plugin.getServer().createInventory(new TraderMenuHolder(playerId), SIZE, TITLE);
+        Inventory inventory = plugin.getServer().createInventory(new TraderMenuHolder(playerId), SIZE, Component.text(TITLE));
         sessions.put(playerId, new TraderSession(playerId, inventory));
         render(player, inventory);
         player.openInventory(inventory);
@@ -261,30 +262,30 @@ public final class TraderView implements Listener {
     private ItemStack createInfoItem(PlayerProfile profile) {
         long credits = profile != null ? profile.credits() : 0L;
         int level = profile != null ? profile.level() : 1;
-        ItemStack item = new ItemStack(Material.PAPER);
+        ItemStack item = ItemStack.of(Material.PAPER);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(traderService.npcName() + " \u00b7 Credits " + credits + " \u00b7 Level " + level);
+            meta.displayName(Component.text(traderService.npcName() + " · Credits " + credits + " · Level " + level));
             item.setItemMeta(meta);
         }
         return item;
     }
 
     private ItemStack filler() {
-        ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemStack item = ItemStack.of(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(" ");
+            meta.displayName(Component.text(" "));
             item.setItemMeta(meta);
         }
         return item;
     }
 
     private ItemStack button(Material material, String name) {
-        ItemStack item = new ItemStack(material);
+        ItemStack item = ItemStack.of(material);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(name);
+            meta.displayName(Component.text(name));
             item.setItemMeta(meta);
         }
         return item;
@@ -300,4 +301,3 @@ public final class TraderView implements Listener {
         }
     }
 }
-

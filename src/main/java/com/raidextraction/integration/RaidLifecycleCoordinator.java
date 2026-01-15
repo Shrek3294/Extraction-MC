@@ -34,6 +34,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.title.Title;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -328,9 +329,7 @@ public final class RaidLifecycleCoordinator {
         // Soft bounds check (V2.0 feature)
         handleBoundsCheck(raid, playerId);
 
-        if (!raid.definition().evacZones().isEmpty()) {
-            handleEvacZoneCheck(raid, playerId);
-        }
+        handleEvacZoneCheck(raid, playerId);
     }
 
     private void handleBoundsCheck(RaidInstance raid, UUID playerId) {
@@ -685,28 +684,32 @@ public final class RaidLifecycleCoordinator {
             return;
         }
         List<EvacZoneEntry> editorZones = mapEditorStorage.getEvacZones(raidInstance.definition().id());
-        if (!editorZones.isEmpty()) {
-            Optional<EvacZoneEntry> zoneOptional = editorZones.stream()
-                    .filter(zone -> isInEditorEvacZone(playerId, zone))
-                    .findFirst();
-            if (zoneOptional.isEmpty()) {
-                if (activeEvacZones.remove(playerId) != null) {
-                    extractionService.cancelExtraction(raidInstance.id(), playerId);
-                    cancelEvacCountdown(playerId);
-                    logEvent(Level.INFO, "extraction_cancelled",
-                            "raidId", raidInstance.id(),
-                            "playerId", playerId,
-                            "reason", "left_zone");
-                    Player player = plugin.getServer().getPlayer(playerId);
-                    if (player != null && player.isOnline()) {
-                        player.sendMessage("Extraction cancelled; you left the evac zone.");
-                        clearActionBar(player);
-                    }
-                }
-                return;
-            }
+        Optional<EvacZoneEntry> editorZoneOptional = editorZones.stream()
+                .filter(zone -> isInEditorEvacZone(playerId, zone))
+                .findFirst();
+        Optional<EvacZoneDefinition> configZoneOptional = raidInstance.definition().evacZones().stream()
+                .filter(zone -> regionProvider.isInEvacZone(playerId, zone))
+                .findFirst();
 
-            EvacZoneEntry evacZone = zoneOptional.get();
+        if (editorZoneOptional.isEmpty() && configZoneOptional.isEmpty()) {
+            if (activeEvacZones.remove(playerId) != null) {
+                extractionService.cancelExtraction(raidInstance.id(), playerId);
+                cancelEvacCountdown(playerId);
+                logEvent(Level.INFO, "extraction_cancelled",
+                        "raidId", raidInstance.id(),
+                        "playerId", playerId,
+                        "reason", "left_zone");
+                Player player = plugin.getServer().getPlayer(playerId);
+                if (player != null && player.isOnline()) {
+                    player.sendMessage("Extraction cancelled; you left the evac zone.");
+                    clearActionBar(player);
+                }
+            }
+            return;
+        }
+
+        if (editorZoneOptional.isPresent()) {
+            EvacZoneEntry evacZone = editorZoneOptional.get();
             ExtractionService.ExtractionResult result = extractionService.beginExtraction(
                     raidInstance.id(),
                     playerId,
@@ -745,27 +748,7 @@ public final class RaidLifecycleCoordinator {
             return;
         }
 
-        Optional<EvacZoneDefinition> zoneOptional = raidInstance.definition().evacZones().stream()
-                .filter(zone -> regionProvider.isInEvacZone(playerId, zone))
-                .findFirst();
-        if (zoneOptional.isEmpty()) {
-            if (activeEvacZones.remove(playerId) != null) {
-                extractionService.cancelExtraction(raidInstance.id(), playerId);
-                cancelEvacCountdown(playerId);
-                logEvent(Level.INFO, "extraction_cancelled",
-                        "raidId", raidInstance.id(),
-                        "playerId", playerId,
-                        "reason", "left_zone");
-                Player player = plugin.getServer().getPlayer(playerId);
-                if (player != null && player.isOnline()) {
-                    player.sendMessage("Extraction cancelled; you left the evac zone.");
-                    clearActionBar(player);
-                }
-            }
-            return;
-        }
-
-        EvacZoneDefinition evacZone = zoneOptional.get();
+        EvacZoneDefinition evacZone = configZoneOptional.get();
         ExtractionService.ExtractionResult result = extractionService.beginExtraction(
                 raidInstance.id(),
                 playerId,
@@ -980,7 +963,7 @@ public final class RaidLifecycleCoordinator {
                         int deposited = finalAppendResult == null ? items.size() : finalAppendResult.added().size();
                         int overflow = finalAppendResult == null ? 0 : finalAppendResult.overflow().size();
                         player.sendMessage("Extraction complete! " + deposited + " stack(s) deposited to your stash.");
-                        if (overflow > 0) {
+                        if (finalAppendResult != null && overflow > 0) {
                             restoreItemsToPlayer(player, finalAppendResult.overflow());
                             player.sendMessage("Your stash is full; " + overflow + " stack(s) kept in your inventory.");
                         }
@@ -1044,10 +1027,10 @@ public final class RaidLifecycleCoordinator {
             long millisRemaining = extractionService.remaining(raidInstance.id(), playerId).toMillis();
             int secondsRemaining = (int) Math.ceil(millisRemaining / 1000.0);
             if (secondsRemaining > 0) {
-                player.sendActionBar("Extracting: " + secondsRemaining + "s");
+                player.sendActionBar(Component.text("Extracting: " + secondsRemaining + "s"));
                 playExtractionTickSound(player);
             } else {
-                player.sendActionBar("Extracting...");
+                player.sendActionBar(Component.text("Extracting..."));
             }
             if (secondsRemaining > 0 && secondsRemaining <= 5 && secondsRemaining != lastAnnounced.get()) {
                 player.sendMessage("Extraction in " + secondsRemaining + "...");
@@ -1091,10 +1074,10 @@ public final class RaidLifecycleCoordinator {
             long millisRemaining = extractionService.remaining(raidInstance.id(), playerId).toMillis();
             int secondsRemaining = (int) Math.ceil(millisRemaining / 1000.0);
             if (secondsRemaining > 0) {
-                player.sendActionBar("Extracting: " + secondsRemaining + "s");
+                player.sendActionBar(Component.text("Extracting: " + secondsRemaining + "s"));
                 playExtractionTickSound(player);
             } else {
-                player.sendActionBar("Extracting...");
+                player.sendActionBar(Component.text("Extracting..."));
             }
             if (secondsRemaining > 0 && secondsRemaining <= 5 && secondsRemaining != lastAnnounced.get()) {
                 player.sendMessage("Extraction in " + secondsRemaining + "...");
@@ -1122,9 +1105,12 @@ public final class RaidLifecycleCoordinator {
         int x = player.getLocation().getBlockX();
         int y = player.getLocation().getBlockY();
         int z = player.getLocation().getBlockZ();
-        return x >= evacZone.minX() && x <= evacZone.maxX()
-                && y >= evacZone.minY() && y <= evacZone.maxY()
-                && z >= evacZone.minZ() && z <= evacZone.maxZ();
+        int padY = 2;
+        int minY = Math.min(evacZone.minY(), evacZone.maxY()) - padY;
+        int maxY = Math.max(evacZone.minY(), evacZone.maxY()) + padY;
+        return x >= Math.min(evacZone.minX(), evacZone.maxX()) && x <= Math.max(evacZone.minX(), evacZone.maxX())
+                && y >= minY && y <= maxY
+                && z >= Math.min(evacZone.minZ(), evacZone.maxZ()) && z <= Math.max(evacZone.minZ(), evacZone.maxZ());
     }
 
     private List<ItemStack> toItemStacks(ItemData itemData) {
@@ -1319,13 +1305,19 @@ public final class RaidLifecycleCoordinator {
     }
 
     private void sendSuccessFeedback(Player player) {
-        player.sendTitle("Extraction complete", "Loot secured", 10, 50, 10);
+        player.showTitle(Title.title(
+                Component.text("Extraction complete"),
+                Component.text("Loot secured"),
+                Title.Times.times(Duration.ofMillis(10L * 50L), Duration.ofMillis(50L * 50L), Duration.ofMillis(10L * 50L))));
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.1f);
     }
 
     private void sendFailureFeedback(Player player, String subtitle) {
         String finalSubtitle = subtitle == null ? "" : subtitle;
-        player.sendTitle("Raid failed", finalSubtitle, 10, 50, 10);
+        player.showTitle(Title.title(
+                Component.text("Raid failed"),
+                Component.text(finalSubtitle),
+                Title.Times.times(Duration.ofMillis(10L * 50L), Duration.ofMillis(50L * 50L), Duration.ofMillis(10L * 50L))));
         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
     }
 
@@ -1345,6 +1337,6 @@ public final class RaidLifecycleCoordinator {
     }
 
     private void clearActionBar(Player player) {
-        player.sendActionBar("");
+        player.sendActionBar(Component.empty());
     }
 }

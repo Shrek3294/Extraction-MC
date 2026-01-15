@@ -5,6 +5,8 @@ import com.raidextraction.item.CustomItemFactory;
 import com.raidextraction.item.CustomItemRegistry;
 import com.raidextraction.item.ItemKeys;
 import com.raidextraction.loot.LootPricingService;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -128,7 +130,7 @@ public final class TraderService {
         }
 
         Villager villager = (Villager) spawn.getWorld().spawnEntity(spawn, EntityType.VILLAGER);
-        villager.setCustomName(npcName);
+        villager.customName(Component.text(npcName));
         villager.setCustomNameVisible(true);
         villager.setAI(false);
         villager.setInvulnerable(true);
@@ -269,7 +271,24 @@ public final class TraderService {
                 return villager;
             }
         }
+        for (Entity entity : world.getNearbyEntities(spawn, 6, 6, 6)) {
+            if (entity instanceof Villager villager && isNamedLikeTrader(villager)) {
+                return villager;
+            }
+        }
         return null;
+    }
+
+    private boolean isNamedLikeTrader(Villager villager) {
+        if (villager == null) {
+            return false;
+        }
+        Component customName = villager.customName();
+        if (customName == null) {
+            return false;
+        }
+        String plain = PlainTextComponentSerializer.plainText().serialize(customName).trim();
+        return !plain.isEmpty() && plain.equalsIgnoreCase(npcName);
     }
 
     private Location lobbySpawnLocation() {
@@ -375,4 +394,3 @@ public final class TraderService {
     public record KitItem(String itemId, String material, int amount) {
     }
 }
-

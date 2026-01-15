@@ -2,7 +2,7 @@ package com.raidextraction.listener;
 
 import com.raidextraction.editor.LootContainerEntry;
 import com.raidextraction.editor.MapEditorManager;
-import org.bukkit.ChatColor;
+import com.raidextraction.util.TextComponents;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -39,14 +39,14 @@ public final class MapEditorListener implements Listener {
                 clicked,
                 event.getBlockFace());
         if (entry == null) {
-            event.getPlayer().sendMessage(ChatColor.RED + "You are not in editor mode.");
+            event.getPlayer().sendMessage(TextComponents.legacy("&cYou are not in editor mode."));
             return;
         }
         event.setCancelled(true);
         int chancePercent = (int) Math.round(entry.chance() * 100.0);
-        event.getPlayer().sendMessage(ChatColor.GREEN + "Loot marker saved at "
+        event.getPlayer().sendMessage(TextComponents.legacy("&aLoot marker saved at "
                 + entry.x() + ", " + entry.y() + ", " + entry.z() + " ("
-                + entry.facing() + ", " + chancePercent + "%).");
+                + entry.facing() + ", " + chancePercent + "%)."));
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -60,19 +60,19 @@ public final class MapEditorListener implements Listener {
             return;
         }
         if (!mapEditorManager.isEditing(event.getPlayer())) {
-            event.getPlayer().sendMessage(ChatColor.RED + "You are not in editor mode.");
+            event.getPlayer().sendMessage(TextComponents.legacy("&cYou are not in editor mode."));
             return;
         }
         var entry = mapEditorManager.setSpawnPoint(event.getPlayer());
         if (entry == null) {
-            event.getPlayer().sendMessage(ChatColor.RED + "Spawn can only be set in the editor world.");
+            event.getPlayer().sendMessage(TextComponents.legacy("&cSpawn can only be set in the editor world."));
             return;
         }
         event.setCancelled(true);
-        event.getPlayer().sendMessage(ChatColor.GREEN + "Spawn set at "
+        event.getPlayer().sendMessage(TextComponents.legacy("&aSpawn set at "
                 + String.format("%.2f", entry.x()) + ", "
                 + String.format("%.2f", entry.y()) + ", "
-                + String.format("%.2f", entry.z()) + ".");
+                + String.format("%.2f", entry.z()) + "."));
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -86,7 +86,7 @@ public final class MapEditorListener implements Listener {
             return;
         }
         if (!mapEditorManager.isEditing(event.getPlayer())) {
-            event.getPlayer().sendMessage(ChatColor.RED + "You are not in editor mode.");
+            event.getPlayer().sendMessage(TextComponents.legacy("&cYou are not in editor mode."));
             return;
         }
         Block clicked = event.getClickedBlock();
@@ -97,26 +97,26 @@ public final class MapEditorListener implements Listener {
             boolean set = mapEditorManager.setEvacPos1(event.getPlayer(), clicked);
             if (set) {
                 event.setCancelled(true);
-                event.getPlayer().sendMessage(ChatColor.YELLOW + "Evac corner 1 set at "
-                        + clicked.getX() + ", " + clicked.getY() + ", " + clicked.getZ() + ".");
+                event.getPlayer().sendMessage(TextComponents.legacy("&eEvac corner 1 set at "
+                        + clicked.getX() + ", " + clicked.getY() + ", " + clicked.getZ() + "."));
             } else {
-                event.getPlayer().sendMessage(ChatColor.RED + "Evac corners must be set in the editor world.");
+                event.getPlayer().sendMessage(TextComponents.legacy("&cEvac corners must be set in the editor world."));
             }
             return;
         }
 
         MapEditorManager.EvacSelectionOutcome outcome = mapEditorManager.setEvacPos2(event.getPlayer(), clicked);
         switch (outcome.status()) {
-            case NO_POS1 -> event.getPlayer().sendMessage(ChatColor.RED + "Set evac corner 1 first.");
-            case WORLD_MISMATCH -> event.getPlayer().sendMessage(ChatColor.RED + "Evac corners must be in the same world.");
-            case NOT_IN_EDITOR_WORLD -> event.getPlayer().sendMessage(ChatColor.RED + "Evac corners must be set in the editor world.");
-            case NOT_EDITING -> event.getPlayer().sendMessage(ChatColor.RED + "You are not in editor mode.");
+            case NO_POS1 -> event.getPlayer().sendMessage(TextComponents.legacy("&cSet evac corner 1 first."));
+            case WORLD_MISMATCH -> event.getPlayer().sendMessage(TextComponents.legacy("&cEvac corners must be in the same world."));
+            case NOT_IN_EDITOR_WORLD -> event.getPlayer().sendMessage(TextComponents.legacy("&cEvac corners must be set in the editor world."));
+            case NOT_EDITING -> event.getPlayer().sendMessage(TextComponents.legacy("&cYou are not in editor mode."));
             case SAVED -> {
                 event.setCancelled(true);
                 var entry = outcome.entry();
-                event.getPlayer().sendMessage(ChatColor.GREEN + "Evac zone " + entry.name() + " saved ("
+                event.getPlayer().sendMessage(TextComponents.legacy("&aEvac zone " + entry.name() + " saved ("
                         + entry.minX() + ", " + entry.minY() + ", " + entry.minZ() + ") to ("
-                        + entry.maxX() + ", " + entry.maxY() + ", " + entry.maxZ() + ").");
+                        + entry.maxX() + ", " + entry.maxY() + ", " + entry.maxZ() + ")."));
             }
         }
     }

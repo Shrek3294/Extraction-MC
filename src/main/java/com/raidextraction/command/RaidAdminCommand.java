@@ -7,6 +7,7 @@ import com.raidextraction.integration.RaidLifecycleCoordinator;
 import com.raidextraction.integration.WorldManager;
 import com.raidextraction.raid.RaidInstance;
 import com.raidextraction.raid.RaidManager;
+import com.raidextraction.profile.PlayerProfileService;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -25,16 +26,18 @@ public final class RaidAdminCommand implements CommandExecutor {
     private final ConfigManager configManager;
     private final WorldManager worldManager;
     private final MapEditorManager mapEditorManager;
+    private final PlayerProfileService profileService;
 
     public RaidAdminCommand(JavaPlugin plugin, RaidManager raidManager,
             RaidLifecycleCoordinator raidLifecycleCoordinator, ConfigManager configManager, WorldManager worldManager,
-            MapEditorManager mapEditorManager) {
+            MapEditorManager mapEditorManager, PlayerProfileService profileService) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
         this.raidManager = Objects.requireNonNull(raidManager, "raidManager");
         this.raidLifecycleCoordinator = Objects.requireNonNull(raidLifecycleCoordinator, "raidLifecycleCoordinator");
         this.configManager = Objects.requireNonNull(configManager, "configManager");
         this.worldManager = Objects.requireNonNull(worldManager, "worldManager");
         this.mapEditorManager = Objects.requireNonNull(mapEditorManager, "mapEditorManager");
+        this.profileService = Objects.requireNonNull(profileService, "profileService");
     }
 
     @Override
@@ -42,8 +45,8 @@ public final class RaidAdminCommand implements CommandExecutor {
         if (args.length == 0) {
             sender.sendMessage(
                     "Usage: /raidadmin <start|stop|cancel|force-extract|edit|exit|save|validate|undo|debugbounds"
-                            + "|lootchance|lootpreview> "
-                            + "[raidId|player]");
+                            + "|lootchance|lootpreview|setlobby|givecredits> "
+                            + "[raidId|player|amount]");
             return true;
         }
         String action = args[0].toLowerCase();
@@ -61,9 +64,14 @@ public final class RaidAdminCommand implements CommandExecutor {
             case "lootchance" -> handleLootChance(sender, args);
             case "lootpreview" -> handleLootPreview(sender, args);
             case "setlobby" -> handleSetLobby(sender, args);
+            case "givecredits" -> handleGiveCredits(sender, args);
             default -> {
+                if ("join".equals(action)) {
+                    sender.sendMessage("Use /raid join <raidId> to queue as a player.");
+                    yield true;
+                }
                 sender.sendMessage(
-                        "Unknown subcommand. Use /raidadmin <start|stop|cancel|force-extract|edit|exit|save|validate|undo|debugbounds|lootchance|lootpreview|setlobby>.");
+                        "Unknown subcommand. Use /raidadmin <start|stop|cancel|force-extract|edit|exit|save|validate|undo|debugbounds|lootchance|lootpreview|setlobby|givecredits>.");
                 yield true;
             }
         };
@@ -77,6 +85,7 @@ public final class RaidAdminCommand implements CommandExecutor {
         String raidId = args[1];
         if (!raidManager.definitions().containsKey(raidId)) {
             sender.sendMessage("Unknown raid id: " + raidId);
+            sender.sendMessage("Available raids: " + String.join(", ", raidManager.definitions().keySet()));
             return true;
         }
         boolean created = raidLifecycleCoordinator.startFromQueue(raidId).isPresent();
@@ -467,6 +476,32 @@ public final class RaidAdminCommand implements CommandExecutor {
         }
         configManager.setLobbySpawn(player.getLocation());
         sender.sendMessage("§aLobby spawn set to your current location!");
+        return true;
+    }
+
+    private boolean handleGiveCredits(CommandSender sender, String[] args) {
+        if (args.length < 3) {
+            sender.sendMessage("Usage: /raidadmin givecredits <player> <amount>");
+            return true;
+        }
+
+        UUID targetId = resolvePlayer(args[1]);
+        if (targetId == null) {
+            sender.sendMessage("Could not find player '" + args[1] + "'.");
+            return true;
+        }
+
+        long amount;
+        try {
+            amount = Long.parseLong(args[2]);
+        } catch (NumberFormatException e) {
+            sender.sendMessage("Invalid amount: " + args[2]);
+            return true;
+        }
+
+        var profile = profileService.addCredits(targetId, amount);
+        sender.sendMessage(
+                String.format("§aGave %d credits to %s. New balance: %d", amount, args[1], profile.credits()));
         return true;
     }
 }

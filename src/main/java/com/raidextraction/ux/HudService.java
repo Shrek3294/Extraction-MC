@@ -3,7 +3,7 @@ package com.raidextraction.ux;
 import com.raidextraction.config.ConfigManager;
 import com.raidextraction.profile.PlayerProfile;
 import com.raidextraction.profile.PlayerProfileService;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -11,6 +11,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
@@ -179,19 +180,20 @@ public final class HudService implements Listener {
     private void render(Player player, PlayerProfile profile) {
         Scoreboard scoreboard = boards.computeIfAbsent(player.getUniqueId(), ignored -> createBoard());
         Objective objective = scoreboard.getObjective(OBJECTIVE_ID);
+        Component serverNameComponent = Component.text(serverName);
         if (objective == null) {
-            objective = scoreboard.registerNewObjective(OBJECTIVE_ID, "dummy", serverName);
+            objective = scoreboard.registerNewObjective(OBJECTIVE_ID, Criteria.DUMMY, serverNameComponent);
             objective.setDisplaySlot(org.bukkit.scoreboard.DisplaySlot.SIDEBAR);
-        } else if (!serverName.equals(objective.getDisplayName())) {
-            objective.setDisplayName(serverName);
+        } else if (!objective.displayName().equals(serverNameComponent)) {
+            objective.displayName(serverNameComponent);
         }
 
         for (String entry : scoreboard.getEntries()) {
             scoreboard.resetScores(entry);
         }
 
-        String creditsLine = ChatColor.GOLD + "Credits: " + ChatColor.WHITE + profile.credits();
-        String levelLine = ChatColor.AQUA + "Level: " + ChatColor.WHITE + profile.level();
+        String creditsLine = "§6Credits: §f" + profile.credits();
+        String levelLine = "§bLevel: §f" + profile.level();
         objective.getScore(levelLine).setScore(1);
         objective.getScore(creditsLine).setScore(2);
 
@@ -231,4 +233,3 @@ public final class HudService implements Listener {
         return trimmed;
     }
 }
-

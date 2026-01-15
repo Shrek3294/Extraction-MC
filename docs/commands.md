@@ -60,7 +60,7 @@ If another plugin owns `/weapon`, use `/raidextraction:weapon ...` or `/rexweapo
 - `/raidadmin stop <activeRaidId>`: Stop a specific active raid instance by id.
 - `/raidadmin cancel <activeRaidId|raidId|active>`: Cancel a raid instance and return players to the lobby.
 - `/raidadmin force-extract <playerName|playerUuid>`: Force a player to extract and commit their loot.
-- `/raidadmin edit <raidId>`: Enter editor mode for a raid definition.
+- `/raidadmin edit <raidId>`: Enter editor mode for a raid definition.ra
 - `/raidadmin exit`: Exit editor mode and return to the lobby.
 - `/raidadmin save`: Save editor data to `locations.yml`.
 - `/raidadmin validate <raidId>`: Validate editor data (spawns, evac zones, loot containers).
@@ -69,6 +69,7 @@ If another plugin owns `/weapon`, use `/raidextraction:weapon ...` or `/rexweapo
 - `/raidadmin lootchance <percent>`: Set the spawn chance for loot containers (default for new markers and update the targeted container).
 - `/raidadmin lootpreview`: Toggle temporary chest placement at all saved loot locations in editor mode.
 - `/raidadmin setlobby`: Set lobby spawn to the caller's current location.
+- `/raidadmin givecredits <player> <amount>`: Give (or take, if negative) credits to a player for testing or administrative purposes.
 
 See `src/main/java/com/raidextraction/command/RaidAdminCommand.java`.
 

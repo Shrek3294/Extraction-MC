@@ -144,6 +144,8 @@
    - [ ] (Owner=Queue, Scope=Backlog) Squads + party queue. DoD: party join and queueing works with existing raid flow.
    - [ ] (Owner=Telemetry, Scope=Backlog) Metrics/telemetry dashboard. DoD: core raid metrics exported and visible.
 
+13. Fix warnins
+-[] fix all ide warnings
 ## Invariants / Safety Rules
 - Do not call Bukkit APIs off the main thread.
 - Loot commit to stash happens only on successful extraction.

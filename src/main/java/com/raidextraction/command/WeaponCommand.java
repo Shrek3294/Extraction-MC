@@ -138,10 +138,17 @@ public final class WeaponCommand implements CommandExecutor {
         }
         ItemStack weapon = player.getInventory().getItemInMainHand();
         ItemStack mod = player.getInventory().getItemInOffHand();
-        var result = upgradeService.applyMod(player, weapon, mod);
+        var outcome = upgradeService.applyMod(player, weapon, mod);
+        var result = outcome.result();
         if (!result.ok()) {
             player.sendMessage("Upgrade failed: " + result.message() + " (hold weapon in main hand, mod/scroll in offhand)");
+            return true;
         }
+        if (outcome.weaponStack() != null) {
+            player.getInventory().setItemInMainHand(outcome.weaponStack());
+        }
+        ItemStack updatedMod = outcome.modStack();
+        player.getInventory().setItemInOffHand(updatedMod == null || updatedMod.getType().isAir() ? null : updatedMod);
         return true;
     }
 
